@@ -1,0 +1,11 @@
+img {
+	max-width: 700px;
+	height: auto;
+	width: 500%;
+	display:block ;
+	margin: auto;
+}
+p{
+	font-size: 22;
+	color: gold;
+}
