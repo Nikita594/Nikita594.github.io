@@ -9,6 +9,12 @@ import { Screen } from '../ui/Screen'
 import { toast, Toasts } from '../ui/toast'
 import { BOTTOM_NAV, TASK_VIEWS, TOOLS } from './nav'
 import { Sidebar } from './Sidebar'
+import { INBOX_ID } from '../db/seed'
+import { ListEditor } from '../features/lists/ListEditor'
+import { ListScreen } from '../features/lists/ListScreen'
+import { SearchScreen } from '../features/search/SearchScreen'
+import { SettingsScreen } from '../features/settings/SettingsScreen'
+import { TaskEditorHost } from '../features/tasks/TaskEditor'
 
 function Placeholder({ title }: { title: string }) {
   return (
@@ -19,10 +25,18 @@ function Placeholder({ title }: { title: string }) {
 }
 
 function renderScreen(route: Route): ReactNode {
+  switch (route.name) {
+    case 'inbox':
+      return <ListScreen listId={INBOX_ID} />
+    case 'list':
+      return <ListScreen key={route.params[0]} listId={route.params[0]} />
+    case 'search':
+      return <SearchScreen />
+    case 'settings':
+      return <SettingsScreen />
+  }
   const item = [...TASK_VIEWS, ...TOOLS].find((n) => n.route === route.name)
-  if (item) return <Placeholder title={item.label} />
-  if (route.name === 'settings') return <Placeholder title="Настройки" />
-  return <Placeholder title="Ритм" />
+  return <Placeholder title={item?.label ?? 'Ритм'} />
 }
 
 export function App() {
@@ -36,7 +50,11 @@ export function App() {
     void requestPersistentStorage()
   }, [])
 
-  const addList = () => toast('Списки появятся на следующем шаге')
+  const [addingList, setAddingList] = useState(false)
+  const addList = () => {
+    setMenuOpen(false)
+    setAddingList(true)
+  }
 
   return (
     <div className="flex h-full">
@@ -78,6 +96,8 @@ export function App() {
         </div>
       )}
 
+      <TaskEditorHost />
+      {addingList && <ListEditor onClose={() => setAddingList(false)} />}
       <Toasts />
     </div>
   )

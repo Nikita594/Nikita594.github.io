@@ -65,4 +65,60 @@ export const scenarios = {
     await page.screenshot({ path: ctx.out + '/mobile-today.png' })
     await b.close()
   },
+
+  async 'Списки и задачи: создать, отредактировать, перенести, найти, пережить перезагрузку'(ctx) {
+    const b = await ctx.browser('tasks')
+    const page = await b.newPage()
+    await page.goto(ctx.url + '#/inbox')
+    await page.getByRole('heading', { name: 'Входящие' }).waitFor()
+
+    // новый список
+    await page.getByRole('button', { name: 'Новый список' }).click()
+    await page.getByPlaceholder('Например, Школа').fill('Школа')
+    await page.getByRole('button', { name: 'Создать' }).click()
+    await page.getByRole('heading', { name: 'Школа' }).waitFor()
+
+    // задача в списке
+    await page.getByLabel('Новая задача').fill('Эссе для Common App')
+    await page.getByLabel('Новая задача').press('Enter')
+    await page.getByText('Эссе для Common App').click()
+    const editor = page.getByRole('dialog', { name: 'Задача' })
+    await editor.waitFor()
+    await editor.getByRole('radio', { name: 'Высокий' }).click()
+    await editor.getByLabel('Новая подзадача').fill('Черновик')
+    await editor.getByLabel('Новая подзадача').press('Enter')
+    await editor.getByLabel('Заметка').fill('500 слов')
+    await editor.getByLabel('Список').selectOption({ label: 'Входящие' })
+    await editor.getByRole('button', { name: 'Закрыть' }).first().click()
+    await editor.waitFor({ state: 'detached' })
+
+    // задача уехала во «Входящие»
+    await page.goto(ctx.url + '#/inbox')
+    await page.getByText('Эссе для Common App').waitFor()
+    await page.getByText('0/1').waitFor()
+
+    // поиск по заметке и подзадаче
+    await page.goto(ctx.url + '#/search')
+    await page.getByLabel('Поиск задач').fill('черновик')
+    await page.getByText('Эссе для Common App').waitFor()
+
+    // перезагрузка — всё на месте
+    await page.reload()
+    await page.getByText('Эссе для Common App').waitFor()
+    await page.getByText('Эссе для Common App').click()
+    await page.getByRole('dialog', { name: 'Задача' }).getByLabel('Заметка').waitFor()
+    const note = await page.getByRole('dialog', { name: 'Задача' }).getByLabel('Заметка').inputValue()
+    assert(note === '500 слов', 'заметка сохранилась: ' + note)
+    await page.keyboard.press('Escape')
+
+    // выполнить и вернуть
+    await page.goto(ctx.url + '#/inbox')
+    await page.getByRole('checkbox', { name: 'Отметить выполненной' }).first().click()
+    await page.getByRole('button', { name: 'Вернуть' }).click()
+    await page.getByRole('checkbox', { name: 'Отметить выполненной' }).first().waitFor()
+
+    await page.screenshot({ path: ctx.out + '/inbox.png' })
+    assert(!b.errors.length, 'ошибки в консоли: ' + b.errors.join('; '))
+    await b.close()
+  },
 }
