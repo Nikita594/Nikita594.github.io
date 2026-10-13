@@ -308,4 +308,48 @@ export const scenarios = {
     assert(!b.errors.length, 'ошибки в консоли: ' + b.errors.join('; '))
     await b.close()
   },
+
+  async 'Помодоро: фокус с паузой записывается в «факт», ручной ввод'(ctx) {
+    const b = await ctx.browser('timer')
+    const page = await b.newPage()
+    await page.clock.install({ time: new Date('2026-10-13T18:00:00+03:00') })
+    await page.goto(ctx.url + '#/timer')
+    await page.getByRole('heading', { name: 'Таймер' }).waitFor()
+    await page.getByLabel('Категория').selectOption({ label: 'Английский' })
+    await page.getByRole('button', { name: 'Начать фокус' }).click()
+    await page.getByRole('button', { name: 'Пауза' }).waitFor()
+    await page.clock.runFor('10:00')
+    const clock = await page.getByTestId('clock').innerText()
+    assert(clock === '15:00', 'через 10 минут осталось 15:00, а показано ' + clock)
+    await page.getByRole('button', { name: 'Пауза' }).click()
+    await page.clock.runFor('05:00')
+    assert((await page.getByTestId('clock').innerText()) === '15:00', 'на паузе время стоит')
+    await page.getByRole('button', { name: 'Продолжить' }).click()
+    await page.getByRole('button', { name: 'Пауза' }).waitFor()
+    await page.clock.runFor('15:01')
+    await page.getByText('Фокус закончен — время отдохнуть').waitFor()
+    await page.getByRole('button', { name: 'Начать перерыв' }).waitFor()
+    const row = page.locator('[data-entry-id]').first()
+    await row.waitFor()
+    const text = await row.innerText()
+    assert(/25 мин/.test(text) && /таймер/.test(text) && /Английский/.test(text), 'запись: ' + text)
+
+    // перезагрузка: запись и перерыв на месте
+    await page.reload()
+    await page.getByRole('button', { name: 'Начать перерыв' }).waitFor()
+    assert((await page.locator('[data-entry-id]').count()) === 1, 'запись пережила перезагрузку')
+
+    // ручной ввод
+    await page.getByRole('button', { name: 'Добавить время' }).click()
+    const dialog = page.getByRole('dialog', { name: 'Добавить время' })
+    await dialog.getByLabel('Категория').selectOption({ label: 'Спорт' })
+    await dialog.getByLabel('С', { exact: true }).fill('07:00')
+    await dialog.getByLabel('До', { exact: true }).fill('08:00')
+    await dialog.getByText('Будет записано 1 ч').waitFor()
+    await dialog.getByRole('button', { name: 'Добавить' }).click()
+    await page.locator('[data-entry-id]').filter({ hasText: 'вручную' }).waitFor()
+    await page.screenshot({ path: ctx.out + '/timer.png' })
+    assert(!b.errors.length, 'ошибки в консоли: ' + b.errors.join('; '))
+    await b.close()
+  },
 }

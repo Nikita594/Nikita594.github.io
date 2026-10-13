@@ -6,6 +6,7 @@ import { Icon, type IconName } from '../ui/icons'
 import { ColorDot, cx } from '../ui/kit'
 import { Logo } from '../ui/Logo'
 import { TASK_VIEWS, TOOLS } from './nav'
+import { useTimerLabel } from '../features/timer/TimerBadge'
 
 function NavLink({
   to,
@@ -13,6 +14,7 @@ function NavLink({
   label,
   active,
   color,
+  badge,
   onNavigate,
 }: {
   to: string
@@ -20,6 +22,7 @@ function NavLink({
   label: string
   active: boolean
   color?: string
+  badge?: string | null
   onNavigate?: () => void
 }) {
   return (
@@ -39,6 +42,7 @@ function NavLink({
         </span>
       )}
       <span className="truncate">{label}</span>
+      {badge && <span className="ml-auto text-xs text-accent tabular-nums">{badge}</span>}
     </a>
   )
 }
@@ -47,6 +51,7 @@ export function Sidebar({ onNavigate, onAddList }: { onNavigate?: () => void; on
   const route = useRoute()
   const lists = useLiveQuery(() => db.lists.orderBy('order').toArray(), [])
   const isActive = (r: string) => route.name === r
+  const timer = useTimerLabel()
   return (
     <nav className="flex h-full flex-col gap-1 overflow-y-auto p-3" aria-label="Разделы">
       <div className="mb-2 flex items-center gap-2 px-3 pt-1">
@@ -67,7 +72,15 @@ export function Sidebar({ onNavigate, onAddList }: { onNavigate?: () => void; on
       ))}
       <div className="my-2 border-t border-line" />
       {TOOLS.map((n) => (
-        <NavLink key={n.route} to={n.route} icon={n.icon} label={n.label} active={isActive(n.route)} onNavigate={onNavigate} />
+        <NavLink
+          key={n.route}
+          to={n.route}
+          icon={n.icon}
+          label={n.label}
+          active={isActive(n.route)}
+          badge={n.route === 'timer' ? timer : undefined}
+          onNavigate={onNavigate}
+        />
       ))}
       <div className="mt-3 mb-1 flex items-center justify-between px-3">
         <span className="text-xs font-medium tracking-wide text-faint uppercase">Списки</span>

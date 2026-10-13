@@ -17,6 +17,9 @@ import { SettingsScreen } from '../features/settings/SettingsScreen'
 import { TaskEditorHost } from '../features/tasks/TaskEditor'
 import { DoneScreen } from '../features/views/DoneScreen'
 import { WeekScreen } from '../features/calendar/WeekScreen'
+import { PomodoroRunner } from '../features/timer/PomodoroRunner'
+import { useTimerLabel } from '../features/timer/TimerBadge'
+import { TimerScreen } from '../features/timer/TimerScreen'
 import { Next7Screen } from '../features/views/Next7Screen'
 import { TodayScreen } from '../features/views/TodayScreen'
 
@@ -38,6 +41,8 @@ function renderScreen(route: Route): ReactNode {
       return <DoneScreen />
     case 'week':
       return <WeekScreen />
+    case 'timer':
+      return <TimerScreen />
     case 'inbox':
       return <ListScreen listId={INBOX_ID} />
     case 'list':
@@ -55,6 +60,7 @@ export function App() {
   const route = useRoute()
   const settings = useSettings()
   const [menuOpen, setMenuOpen] = useState(false)
+  const timerLabel = useTimerLabel()
   useApplyTheme(settings.theme)
 
   useEffect(() => {
@@ -91,7 +97,7 @@ export function App() {
             )}
           >
             <Icon name={n.icon} size={22} />
-            {n.label}
+            <span className="tabular-nums">{n.route === 'timer' && timerLabel ? timerLabel : n.label}</span>
           </a>
         ))}
         <button
@@ -113,6 +119,7 @@ export function App() {
       )}
 
       <TaskEditorHost />
+      <PomodoroRunner />
       {addingList && <ListEditor onClose={() => setAddingList(false)} />}
       <Toasts />
     </div>
