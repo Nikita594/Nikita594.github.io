@@ -16,6 +16,7 @@ import { SearchScreen } from '../features/search/SearchScreen'
 import { SettingsScreen } from '../features/settings/SettingsScreen'
 import { TaskEditorHost } from '../features/tasks/TaskEditor'
 import { DoneScreen } from '../features/views/DoneScreen'
+import { WeekScreen } from '../features/calendar/WeekScreen'
 import { Next7Screen } from '../features/views/Next7Screen'
 import { TodayScreen } from '../features/views/TodayScreen'
 
@@ -35,6 +36,8 @@ function renderScreen(route: Route): ReactNode {
       return <Next7Screen />
     case 'done':
       return <DoneScreen />
+    case 'week':
+      return <WeekScreen />
     case 'inbox':
       return <ListScreen listId={INBOX_ID} />
     case 'list':
@@ -91,7 +94,11 @@ export function App() {
             {n.label}
           </a>
         ))}
-        <button type="button" onClick={() => setMenuOpen(true)} className="flex flex-1 flex-col items-center gap-0.5 py-2 text-[11px] text-muted">
+        <button
+          type="button"
+          onClick={() => setMenuOpen(true)}
+          className="flex flex-1 flex-col items-center gap-0.5 py-2 text-[11px] text-muted"
+        >
           <Icon name="menu" size={22} />
           Ещё
         </button>

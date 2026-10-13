@@ -23,9 +23,14 @@ export function Screen({
         </div>
         {actions && <div className="flex items-center gap-1">{actions}</div>}
       </header>
-      <div className="min-h-0 flex-1 overflow-y-auto pb-24 md:pb-8">
-        <div className={wide ? 'h-full' : 'mx-auto w-full max-w-3xl px-3 py-3 md:px-6 md:py-5'}>{children}</div>
-      </div>
+      {wide ? (
+        // экран сам управляет прокруткой (календарь); снизу оставляем место под панель навигации телефона
+        <div className="min-h-0 flex-1 overflow-hidden pb-[calc(3.5rem+env(safe-area-inset-bottom))] md:pb-0">{children}</div>
+      ) : (
+        <div className="min-h-0 flex-1 overflow-y-auto pb-24 md:pb-8">
+          <div className="mx-auto w-full max-w-3xl px-3 py-3 md:px-6 md:py-5">{children}</div>
+        </div>
+      )}
     </div>
   )
 }

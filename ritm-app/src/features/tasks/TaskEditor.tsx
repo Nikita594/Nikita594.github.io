@@ -47,7 +47,14 @@ function useDraft(value: string, save: (v: string) => void) {
   }
 }
 
-function AutoTextarea(props: { value: string; onChange: (v: string) => void; onBlur: () => void; className?: string; placeholder?: string; label: string }) {
+function AutoTextarea(props: {
+  value: string
+  onChange: (v: string) => void
+  onBlur: () => void
+  className?: string
+  placeholder?: string
+  label: string
+}) {
   const ref = useRef<HTMLTextAreaElement>(null)
   useEffect(() => {
     const el = ref.current
@@ -132,7 +139,9 @@ function TaskEditor({ task }: { task: Task }) {
               aria-label="Дата"
               className={cx(selectCls, 'w-[8.5rem]')}
               value={task.dueDate ?? ''}
-              onChange={(e) => set(e.target.value ? { dueDate: e.target.value } : { dueDate: undefined, dueTime: undefined, repeat: undefined })}
+              onChange={(e) =>
+                set(e.target.value ? { dueDate: e.target.value } : { dueDate: undefined, dueTime: undefined, repeat: undefined })
+              }
             />
             {task.dueDate && (
               <input
@@ -144,7 +153,13 @@ function TaskEditor({ task }: { task: Task }) {
               />
             )}
             {task.dueDate && (
-              <IconButton icon="close" label="Убрать срок" size={16} className="h-8 w-8" onClick={() => set({ dueDate: undefined, dueTime: undefined, repeat: undefined })} />
+              <IconButton
+                icon="close"
+                label="Убрать срок"
+                size={16}
+                className="h-8 w-8"
+                onClick={() => set({ dueDate: undefined, dueTime: undefined, repeat: undefined })}
+              />
             )}
           </Row>
 
@@ -228,7 +243,10 @@ function TaskEditor({ task }: { task: Task }) {
                 aria-checked={s.done}
                 aria-label={s.done ? 'Снять отметку' : 'Отметить'}
                 onClick={() => void patchSubtask(task, s.id, { done: !s.done })}
-                className={cx('flex h-4 w-4 shrink-0 items-center justify-center rounded border-2', s.done ? 'border-transparent bg-faint text-white' : 'border-faint')}
+                className={cx(
+                  'flex h-4 w-4 shrink-0 items-center justify-center rounded border-2',
+                  s.done ? 'border-transparent bg-faint text-white' : 'border-faint',
+                )}
               >
                 {s.done && <Icon name="check" size={11} strokeWidth={3} />}
               </button>
@@ -239,7 +257,13 @@ function TaskEditor({ task }: { task: Task }) {
                 onKeyDown={(e) => e.key === 'Enter' && (e.target as HTMLInputElement).blur()}
                 className={cx('min-w-0 flex-1 bg-transparent text-sm outline-none', s.done && 'text-faint line-through')}
               />
-              <IconButton icon="close" label="Удалить подзадачу" size={14} className="h-7 w-7 opacity-60 group-hover:opacity-100" onClick={() => void removeSubtask(task, s.id)} />
+              <IconButton
+                icon="close"
+                label="Удалить подзадачу"
+                size={14}
+                className="h-7 w-7 opacity-60 group-hover:opacity-100"
+                onClick={() => void removeSubtask(task, s.id)}
+              />
             </div>
           ))}
           <form

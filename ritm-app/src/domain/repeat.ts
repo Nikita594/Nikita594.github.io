@@ -103,7 +103,11 @@ export function describeRepeat(rule: Repeat): string {
       const days = [...rule.days].sort()
       if (days.length === 1) s = `Каждую неделю, в ${WEEKDAY_NAMES_ACC[days[0] - 1]}`.replace('в вторник', 'во вторник')
       else if (days.length === 7) s = 'Каждый день'
-      else s = days.map((d) => WEEKDAY_SHORT[d - 1]).join(', ').replace(/^./, (c) => c.toUpperCase())
+      else
+        s = days
+          .map((d) => WEEKDAY_SHORT[d - 1])
+          .join(', ')
+          .replace(/^./, (c) => c.toUpperCase())
       break
     }
     case 'interval':

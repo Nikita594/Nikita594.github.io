@@ -1,18 +1,5 @@
 import Dexie, { type EntityTable } from 'dexie'
-import type {
-  Category,
-  Goal,
-  Habit,
-  HabitCheck,
-  List,
-  MoneyEntry,
-  Savings,
-  Setting,
-  Task,
-  TimeBlock,
-  TimeEntry,
-  WeekReview,
-} from './types'
+import type { Category, Goal, Habit, HabitCheck, List, MoneyEntry, Savings, Setting, Task, TimeBlock, TimeEntry, WeekReview } from './types'
 import { seed } from './seed'
 
 export const DB_NAME = 'ritm'

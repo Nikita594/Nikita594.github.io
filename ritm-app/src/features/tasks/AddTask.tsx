@@ -1,4 +1,5 @@
 import { useMemo, useState, type ReactNode } from 'react'
+import { db } from '../../db/db'
 import { useCategories, useLists } from '../../db/hooks'
 import { createTask, type NewTask } from '../../db/tasks'
 import { formatDayLabel, formatDuration, formatMinutes } from '../../domain/dates'
@@ -11,7 +12,9 @@ import { toast } from '../../ui/toast'
 
 function Chip({ icon, children, warn }: { icon: IconName; children: ReactNode; warn?: boolean }) {
   return (
-    <span className={cx('inline-flex items-center gap-1 rounded-md px-1.5 py-0.5', warn ? 'bg-surface-2 text-p2' : 'bg-accent-soft text-text')}>
+    <span
+      className={cx('inline-flex items-center gap-1 rounded-md px-1.5 py-0.5', warn ? 'bg-surface-2 text-p2' : 'bg-accent-soft text-text')}
+    >
       <Icon name={icon} size={12} />
       {children}
     </span>
@@ -30,13 +33,38 @@ export function ParsePreview({ parsed }: { parsed: QuickAddResult }) {
         {parsed.dueTime !== undefined && ` ${formatMinutes(parsed.dueTime)}`}
       </Chip>,
     )
-  if (parsed.repeat) chips.push(<Chip key="r" icon="repeat">{describeRepeat(parsed.repeat)}</Chip>)
-  if (parsed.durationMin) chips.push(<Chip key="t" icon="clock">{formatDuration(parsed.durationMin)}</Chip>)
-  if (parsed.priority !== undefined) chips.push(<Chip key="p" icon="flag">{PRIORITY_LABELS[parsed.priority]}</Chip>)
+  if (parsed.repeat)
+    chips.push(
+      <Chip key="r" icon="repeat">
+        {describeRepeat(parsed.repeat)}
+      </Chip>,
+    )
+  if (parsed.durationMin)
+    chips.push(
+      <Chip key="t" icon="clock">
+        {formatDuration(parsed.durationMin)}
+      </Chip>,
+    )
+  if (parsed.priority !== undefined)
+    chips.push(
+      <Chip key="p" icon="flag">
+        {PRIORITY_LABELS[parsed.priority]}
+      </Chip>,
+    )
   const cat = cats.find((c) => c.id === parsed.categoryId)
-  if (cat) chips.push(<Chip key="c" icon="tag">{cat.name}</Chip>)
+  if (cat)
+    chips.push(
+      <Chip key="c" icon="tag">
+        {cat.name}
+      </Chip>,
+    )
   const list = lists.find((l) => l.id === parsed.listId)
-  if (list) chips.push(<Chip key="l" icon="folder">{list.name}</Chip>)
+  if (list)
+    chips.push(
+      <Chip key="l" icon="folder">
+        {list.name}
+      </Chip>,
+    )
   for (const u of parsed.unknown) chips.push(<Chip key={u} icon="tag" warn>{`${u} — такой нет`}</Chip>)
   if (!chips.length) return null
   return <div className="flex flex-wrap gap-1.5 px-3 pb-2 text-xs">{chips}</div>
@@ -83,13 +111,18 @@ export function AddTask({
       className="mb-2 rounded-xl border border-line bg-surface focus-within:border-accent"
       onSubmit={async (e) => {
         e.preventDefault()
-        if (!text.trim()) return
-        if (!parsed.title) {
+        const value = text
+        if (!value.trim()) return
+        // поле очищаем сразу, чтобы можно было печатать следующую задачу, пока эта сохраняется
+        setText('')
+        // разбираем заново по свежим данным: категории могли ещё не загрузиться, пока печатали
+        const fresh = parseQuickAdd(value, { categories: await db.categories.toArray(), lists: await db.lists.toArray() })
+        if (!fresh.title) {
+          setText(value)
           toast('Добавьте название задачи')
           return
         }
-        await createFromQuickAdd(parsed, defaults)
-        setText('')
+        await createFromQuickAdd(fresh, defaults)
         onCreated?.()
       }}
     >

@@ -49,7 +49,13 @@ export const scenarios = {
     await page.goto(ctx.singleUrl)
     await page.getByRole('heading', { name: 'Сегодня' }).waitFor()
     assert((await dbCount(page, 'lists')) === 1, 'список «Входящие» создан')
-    const sw = await page.evaluate(() => navigator.serviceWorker?.getRegistrations?.().then((r) => r.length).catch(() => 0) ?? 0)
+    const sw = await page.evaluate(
+      () =>
+        navigator.serviceWorker
+          ?.getRegistrations?.()
+          .then((r) => r.length)
+          .catch(() => 0) ?? 0,
+    )
     assert(sw === 0, 'service worker не должен регистрироваться')
     assert(!b.errors.length, 'ошибки в консоли: ' + b.errors.join('; '))
     await b.close()
@@ -190,7 +196,115 @@ export const scenarios = {
     await page.screenshot({ path: ctx.out + '/next7.png', fullPage: true })
 
     await page.goto(ctx.url + '#/done')
-    await page.locator('section').filter({ has: page.getByRole('button', { name: /^Сегодня/ }) }).getByText('SAT practice').waitFor()
+    await page
+      .locator('section')
+      .filter({ has: page.getByRole('button', { name: /^Сегодня/ }) })
+      .getByText('SAT practice')
+      .waitFor()
+    assert(!b.errors.length, 'ошибки в консоли: ' + b.errors.join('; '))
+    await b.close()
+  },
+
+  async 'Неделя: создать блок протягиванием, перенести, растянуть, поставить задачу из панели'(ctx) {
+    const b = await ctx.browser('week')
+    const page = await b.newPage()
+    await page.goto(ctx.url + '#/inbox')
+    await page.getByLabel('Новая задача').fill('эссе 1ч30м #учёба')
+    await page.getByLabel('Новая задача').press('Enter')
+    await page.locator('[data-task-id]').filter({ hasText: 'эссе' }).waitFor()
+
+    await page.goto(ctx.url + '#/week')
+    await page.getByRole('heading', { name: 'Неделя' }).waitFor()
+    // показываем утро и берём первые два дня недели (они всегда есть)
+    await page.evaluate(() => (document.querySelector('[data-week-grid]').scrollTop = (9 * 60 - 360) * 0.8))
+    const cols = page.locator('[data-date]')
+    const day1 = await cols.nth(0).getAttribute('data-date')
+    const day2 = await cols.nth(1).getAttribute('data-date')
+    const box = async (i) => cols.nth(i).boundingBox()
+    const yOf = (bx, min) => bx.y + (min - 360) * 0.8
+
+    // 1. протянуть 10:00 → 11:30
+    let c = await box(0)
+    await page.mouse.move(c.x + c.width / 2, yOf(c, 600) + 2)
+    await page.mouse.down()
+    await page.mouse.move(c.x + c.width / 2, yOf(c, 690) - 2, { steps: 8 })
+    await page.mouse.up()
+    const dialog = page.getByRole('dialog', { name: 'Блок времени' })
+    await dialog.waitFor()
+    await dialog.getByLabel('Категория').selectOption({ label: 'Спорт' })
+    await dialog.getByLabel('Название').fill('Тренировка')
+    await dialog.getByLabel('Название').blur()
+    await dialog.getByRole('button', { name: 'Готово' }).click()
+    const block = page.getByRole('button', { name: 'Тренировка, 10:00–11:30' })
+    await block.waitFor()
+
+    // 2. перенести на следующий день на час позже
+    let bb = await block.boundingBox()
+    c = await box(1)
+    await page.mouse.move(bb.x + 20, bb.y + 8)
+    await page.mouse.down()
+    await page.mouse.move(c.x + 20, bb.y + 8 + 48, { steps: 10 })
+    await page.mouse.up()
+    const moved = page.getByRole('button', { name: 'Тренировка, 11:00–12:30' })
+    await moved.waitFor()
+    assert((await moved.locator('xpath=..').getAttribute('data-date')) === day2, 'блок переехал на второй день')
+
+    // 3. растянуть до 13:00
+    bb = await moved.boundingBox()
+    await page.mouse.move(bb.x + bb.width / 2, bb.y + bb.height - 3)
+    await page.mouse.down()
+    await page.mouse.move(bb.x + bb.width / 2, bb.y + bb.height - 3 + 24, { steps: 6 })
+    await page.mouse.up()
+    await page.getByRole('button', { name: 'Тренировка, 11:00–13:00' }).waitFor()
+
+    // 4. задачу из панели — в первый день на 14:00
+    await page.evaluate(() => (document.querySelector('[data-week-grid]').scrollTop = (12 * 60 - 360) * 0.8))
+    const item = page.locator('[data-panel-task]').filter({ hasText: 'эссе' })
+    const ib = await item.boundingBox()
+    c = await box(0)
+    await page.mouse.move(ib.x + 20, ib.y + 10)
+    await page.mouse.down()
+    await page.mouse.move(c.x + c.width / 2, yOf(c, 14 * 60) + 4, { steps: 12 })
+    await page.mouse.up()
+    await page.getByRole('button', { name: 'эссе, 14:00–15:30' }).waitFor()
+    assert((await page.locator('[data-panel-task]').filter({ hasText: 'эссе' }).count()) === 0, 'задача ушла из панели')
+    await page.screenshot({ path: ctx.out + '/week.png' })
+
+    // 5. после перезагрузки всё на месте, у задачи появился срок
+    await page.reload()
+    await page.getByRole('button', { name: 'Тренировка, 11:00–13:00' }).waitFor()
+    await page.getByRole('button', { name: 'эссе, 14:00–15:30' }).waitFor()
+    const due = await page.evaluate(
+      () =>
+        new Promise((res) => {
+          const r = indexedDB.open('ritm')
+          r.onsuccess = () => {
+            const q = r.result.transaction('tasks').objectStore('tasks').getAll()
+            q.onsuccess = () => res(q.result.find((t) => t.title === 'эссе'))
+          }
+        }),
+    )
+    assert(due.dueDate === day1 && due.dueTime === 840, 'срок задачи: ' + JSON.stringify([due.dueDate, due.dueTime]))
+    assert(!b.errors.length, 'ошибки в консоли: ' + b.errors.join('; '))
+    await b.close()
+  },
+
+  async 'Неделя на телефоне: один день, блок создаётся нажатием'(ctx) {
+    const b = await ctx.browser('week-mobile', { viewport: { width: 375, height: 740 }, launch: { hasTouch: true, isMobile: true } })
+    const page = await b.newPage()
+    await page.goto(ctx.url + '#/week')
+    await page.getByRole('tablist', { name: 'День недели' }).waitFor()
+    assert((await page.locator('[data-date]').count()) === 1, 'на телефоне показан один день')
+    await page.evaluate(() => (document.querySelector('[data-week-grid]').scrollTop = (9 * 60 - 360) * 0.8))
+    const c = await page.locator('[data-date]').boundingBox()
+    await page.touchscreen.tap(c.x + c.width / 2, c.y + (10 * 60 + 10 - 360) * 0.8)
+    const dialog = page.getByRole('dialog', { name: 'Блок времени' })
+    await dialog.waitFor()
+    await dialog.getByRole('button', { name: 'Готово' }).click()
+    await page.getByRole('button', { name: /10:00–11:00/ }).waitFor()
+    const overflow = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth)
+    assert(overflow <= 0, `страница шире экрана на ${overflow}px`)
+    await page.screenshot({ path: ctx.out + '/week-mobile.png' })
     assert(!b.errors.length, 'ошибки в консоли: ' + b.errors.join('; '))
     await b.close()
   },

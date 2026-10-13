@@ -17,7 +17,9 @@ const svg = (pad, radius) => `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0
   ]
   for (const [name, size, s] of shots) {
     await page.setViewportSize({ width: size, height: size })
-    await page.setContent(`<style>html,body{margin:0;background:transparent}</style><img src="data:image/svg+xml,${encodeURIComponent(s)}" width="${size}" height="${size}">`)
+    await page.setContent(
+      `<style>html,body{margin:0;background:transparent}</style><img src="data:image/svg+xml,${encodeURIComponent(s)}" width="${size}" height="${size}">`,
+    )
     await page.screenshot({ path: path.join(out, name), omitBackground: true })
   }
   await browser.close()

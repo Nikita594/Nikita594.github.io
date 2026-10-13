@@ -29,7 +29,14 @@ describe('фраза из задания', () => {
   })
   it('те же части в другом порядке', () => {
     const r = p('#учёба !2 завтра английский 1ч в 18:00')
-    expect(r).toMatchObject({ title: 'английский', dueDate: '2026-10-14', dueTime: 1080, durationMin: 60, priority: 2, categoryId: 'study' })
+    expect(r).toMatchObject({
+      title: 'английский',
+      dueDate: '2026-10-14',
+      dueTime: 1080,
+      durationMin: 60,
+      priority: 2,
+      categoryId: 'study',
+    })
   })
 })
 
@@ -157,25 +164,56 @@ describe('повторы (сегодня вторник, 12:00)', () => {
     expect(p('слова английский каждый день')).toMatchObject({ title: 'слова английский', repeat: { kind: 'daily' }, dueDate: '2026-10-13' })
   })
   it('«по будням в 7 утра» — завтра, раз сегодня 7:00 прошло', () => {
-    expect(p('пробежка по будням в 7 утра')).toMatchObject({ title: 'пробежка', repeat: { kind: 'weekdays' }, dueDate: '2026-10-14', dueTime: 420 })
+    expect(p('пробежка по будням в 7 утра')).toMatchObject({
+      title: 'пробежка',
+      repeat: { kind: 'weekdays' },
+      dueDate: '2026-10-14',
+      dueTime: 420,
+    })
   })
   it('«каждую пятницу в 18:00» — ближайшая пятница', () => {
-    expect(p('монтаж каждую пятницу в 18:00')).toMatchObject({ title: 'монтаж', repeat: { kind: 'weekly', days: [5] }, dueDate: '2026-10-16', dueTime: 1080 })
+    expect(p('монтаж каждую пятницу в 18:00')).toMatchObject({
+      title: 'монтаж',
+      repeat: { kind: 'weekly', days: [5] },
+      dueDate: '2026-10-16',
+      dueTime: 1080,
+    })
   })
   it('«по понедельникам и четвергам»', () => {
-    expect(p('репетитор по понедельникам и четвергам')).toMatchObject({ title: 'репетитор', repeat: { kind: 'weekly', days: [1, 4] }, dueDate: '2026-10-15' })
+    expect(p('репетитор по понедельникам и четвергам')).toMatchObject({
+      title: 'репетитор',
+      repeat: { kind: 'weekly', days: [1, 4] },
+      dueDate: '2026-10-15',
+    })
   })
   it('«по пн, ср, пт»', () => {
-    expect(p('зал по пн, ср, пт 1ч')).toMatchObject({ title: 'зал', repeat: { kind: 'weekly', days: [1, 3, 5] }, dueDate: '2026-10-14', durationMin: 60 })
+    expect(p('зал по пн, ср, пт 1ч')).toMatchObject({
+      title: 'зал',
+      repeat: { kind: 'weekly', days: [1, 3, 5] },
+      dueDate: '2026-10-14',
+      durationMin: 60,
+    })
   })
   it('«каждые 3 дня»', () => {
-    expect(p('полить цветы каждые 3 дня')).toMatchObject({ title: 'полить цветы', repeat: { kind: 'interval', every: 3 }, dueDate: '2026-10-13' })
+    expect(p('полить цветы каждые 3 дня')).toMatchObject({
+      title: 'полить цветы',
+      repeat: { kind: 'interval', every: 3 },
+      dueDate: '2026-10-13',
+    })
   })
   it('«каждую неделю» — в тот же день недели, что и срок', () => {
-    expect(p('пробный SAT каждую неделю в субботу')).toMatchObject({ title: 'пробный SAT', repeat: { kind: 'weekly', days: [6] }, dueDate: '2026-10-17' })
+    expect(p('пробный SAT каждую неделю в субботу')).toMatchObject({
+      title: 'пробный SAT',
+      repeat: { kind: 'weekly', days: [6] },
+      dueDate: '2026-10-17',
+    })
   })
   it('«каждый месяц» с датой', () => {
-    expect(p('оплатить телефон каждый месяц 20.10')).toMatchObject({ title: 'оплатить телефон', repeat: { kind: 'monthly', day: 20 }, dueDate: '2026-10-20' })
+    expect(p('оплатить телефон каждый месяц 20.10')).toMatchObject({
+      title: 'оплатить телефон',
+      repeat: { kind: 'monthly', day: 20 },
+      dueDate: '2026-10-20',
+    })
   })
   it('без повтора поле не заполняется', () => {
     expect(p('эссе завтра').repeat).toBeUndefined()
@@ -183,10 +221,13 @@ describe('повторы (сегодня вторник, 12:00)', () => {
 })
 
 describe('обычные названия не превращаются в даты', () => {
-  it.each(['прочитать 2 главы', 'сделать 5 задач', 'SAT тест 3', 'урок 7', 'неделя 3 конспект', 'монтаж 1 серии', 'сходить в магазин'])('«%s»', (input) => {
-    const r = p(input)
-    expect(r.title).toBe(input)
-    expect(r.dueDate).toBeUndefined()
-    expect(r.durationMin).toBeUndefined()
-  })
+  it.each(['прочитать 2 главы', 'сделать 5 задач', 'SAT тест 3', 'урок 7', 'неделя 3 конспект', 'монтаж 1 серии', 'сходить в магазин'])(
+    '«%s»',
+    (input) => {
+      const r = p(input)
+      expect(r.title).toBe(input)
+      expect(r.dueDate).toBeUndefined()
+      expect(r.durationMin).toBeUndefined()
+    },
+  )
 })

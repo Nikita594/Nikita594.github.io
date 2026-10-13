@@ -49,7 +49,10 @@ export async function toggleTask(task: Task) {
     return
   }
   const { nextDue, undo } = await completeTask(task.id)
-  toast(nextDue ? `Готово. Следующий раз — ${formatDayLabel(nextDue).toLowerCase()}` : 'Готово', { label: 'Вернуть', run: () => void undo() })
+  toast(nextDue ? `Готово. Следующий раз — ${formatDayLabel(nextDue).toLowerCase()}` : 'Готово', {
+    label: 'Вернуть',
+    run: () => void undo(),
+  })
 }
 
 export async function removeTask(task: Task) {

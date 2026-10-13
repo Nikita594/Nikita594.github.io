@@ -31,7 +31,13 @@ function NavLink({
         active ? 'bg-accent-soft font-medium text-text' : 'text-muted hover:bg-surface-2 hover:text-text',
       )}
     >
-      {icon ? <Icon name={icon} size={18} /> : <span className="flex w-[18px] justify-center"><ColorDot color={color!} /></span>}
+      {icon ? (
+        <Icon name={icon} size={18} />
+      ) : (
+        <span className="flex w-[18px] justify-center">
+          <ColorDot color={color!} />
+        </span>
+      )}
       <span className="truncate">{label}</span>
     </a>
   )
@@ -65,7 +71,13 @@ export function Sidebar({ onNavigate, onAddList }: { onNavigate?: () => void; on
       ))}
       <div className="mt-3 mb-1 flex items-center justify-between px-3">
         <span className="text-xs font-medium tracking-wide text-faint uppercase">Списки</span>
-        <button type="button" onClick={onAddList} className="rounded p-1 text-faint hover:bg-surface-2 hover:text-text" aria-label="Новый список" title="Новый список">
+        <button
+          type="button"
+          onClick={onAddList}
+          className="rounded p-1 text-faint hover:bg-surface-2 hover:text-text"
+          aria-label="Новый список"
+          title="Новый список"
+        >
           <Icon name="plus" size={16} />
         </button>
       </div>

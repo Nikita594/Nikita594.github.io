@@ -23,7 +23,11 @@ describe('сортировка задач', () => {
   })
   it('в один день: по времени, задачи без времени — после', () => {
     const d = '2026-10-14'
-    const list = [t({ title: 'весь день', dueDate: d }), t({ title: '18:00', dueDate: d, dueTime: 1080 }), t({ title: '9:00', dueDate: d, dueTime: 540 })]
+    const list = [
+      t({ title: 'весь день', dueDate: d }),
+      t({ title: '18:00', dueDate: d, dueTime: 1080 }),
+      t({ title: '9:00', dueDate: d, dueTime: 540 }),
+    ]
     expect(list.sort(compareOpenTasks).map((x) => x.title)).toEqual(['9:00', '18:00', 'весь день'])
   })
   it('при равном сроке важнее — выше', () => {

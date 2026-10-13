@@ -57,6 +57,7 @@ export function parseHHMM(s: string): Minutes | undefined {
   if (!m) return undefined
   const h = Number(m[1])
   const min = Number(m[2])
+  if (h === 24 && min === 0) return 24 * 60 // конец дня
   if (h > 23 || min > 59) return undefined
   return h * 60 + min
 }

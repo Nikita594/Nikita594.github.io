@@ -1,5 +1,6 @@
 import 'fake-indexeddb/auto'
 import { beforeEach, describe, expect, it } from 'vitest'
+import { placeTask } from './blocks'
 import { db } from './db'
 import { INBOX_ID } from './seed'
 import { addSubtask, completeTask, createList, createTask, deleteList, deleteTask, moveTask, patchSubtask, setTaskDone } from './tasks'
@@ -124,5 +125,19 @@ describe('повторяющиеся задачи', () => {
     await completeTask(t.id, now)
     expect((await db.tasks.get(t.id))?.status).toBe('done')
     expect(await db.tasks.count()).toBe(1)
+  })
+})
+
+describe('календарь', () => {
+  it('задача, перетащенная в слот, получает блок своей длительности и срок', async () => {
+    const t = await createTask({ title: 'Эссе', durationMin: 90, categoryId: 'study' })
+    const block = await placeTask(t, '2026-10-15', 16 * 60)
+    expect(block).toMatchObject({ date: '2026-10-15', startMin: 960, endMin: 1050, taskId: t.id, categoryId: 'study' })
+    expect(await db.tasks.get(t.id)).toMatchObject({ dueDate: '2026-10-15', dueTime: 960, durationMin: 90 })
+  })
+  it('без длительности — час; у конца дня блок сдвигается, чтобы влезть', async () => {
+    const t = await createTask({ title: 'Чтение' })
+    const block = await placeTask(t, '2026-10-15', 23 * 60 + 30)
+    expect(block).toMatchObject({ startMin: 23 * 60, endMin: 24 * 60 })
   })
 })

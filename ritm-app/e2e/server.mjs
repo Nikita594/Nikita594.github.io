@@ -32,5 +32,7 @@ export function serve(root, prefix = '/ritm/') {
       res.writeHead(404).end('not found')
     }
   })
-  return new Promise((resolve) => server.listen(0, '127.0.0.1', () => resolve({ server, url: `http://127.0.0.1:${server.address().port}${prefix}` })))
+  return new Promise((resolve) =>
+    server.listen(0, '127.0.0.1', () => resolve({ server, url: `http://127.0.0.1:${server.address().port}${prefix}` })),
+  )
 }

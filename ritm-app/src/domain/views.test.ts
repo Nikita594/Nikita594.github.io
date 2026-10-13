@@ -35,7 +35,15 @@ describe('виды', () => {
       t({ title: 'зал', dueDate: '2026-10-14', repeat: { kind: 'weekly', days: [3, 5] } }),
     ]
     const days = nextDays(tasks, today)
-    expect(days.map((d) => d.date)).toEqual(['2026-10-13', '2026-10-14', '2026-10-15', '2026-10-16', '2026-10-17', '2026-10-18', '2026-10-19'])
+    expect(days.map((d) => d.date)).toEqual([
+      '2026-10-13',
+      '2026-10-14',
+      '2026-10-15',
+      '2026-10-16',
+      '2026-10-17',
+      '2026-10-18',
+      '2026-10-19',
+    ])
     expect(days[0].tasks.map((x) => x.title)).toEqual(['зарядка'])
     expect(days[0].upcoming).toEqual([])
     expect(days[1].tasks.map((x) => x.title)).toEqual(['зал'])

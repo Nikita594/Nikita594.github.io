@@ -43,7 +43,10 @@ export function ListScreen({ listId }: { listId: string }) {
               icon="trash"
               label="Удалить список"
               onClick={() => {
-                const msg = open.length || done.length ? `Удалить список «${list.name}»? Его задачи переедут во «Входящие».` : `Удалить список «${list.name}»?`
+                const msg =
+                  open.length || done.length
+                    ? `Удалить список «${list.name}»? Его задачи переедут во «Входящие».`
+                    : `Удалить список «${list.name}»?`
                 if (confirm(msg)) {
                   void deleteList(list.id)
                   navigate('inbox')

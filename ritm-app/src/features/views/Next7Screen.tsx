@@ -32,7 +32,12 @@ export function Next7Screen() {
   const today = useToday()
   const last = addDays(today, 6)
   const tasks = useLiveQuery(
-    () => db.tasks.where('dueDate').belowOrEqual(last).filter((t) => t.status === 'open').toArray(),
+    () =>
+      db.tasks
+        .where('dueDate')
+        .belowOrEqual(last)
+        .filter((t) => t.status === 'open')
+        .toArray(),
     [last],
   )
   const all = tasks ?? []
