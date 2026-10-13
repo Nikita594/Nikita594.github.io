@@ -1,0 +1,6 @@
+node_modules
+dist
+dist-single
+e2e/.profiles
+e2e/out
+*.log
