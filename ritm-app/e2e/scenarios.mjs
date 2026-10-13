@@ -164,4 +164,34 @@ export const scenarios = {
     assert(!b.errors.length, 'ошибки в консоли: ' + b.errors.join('; '))
     await b.close()
   },
+
+  async 'Виды: Сегодня, 7 дней, Выполнено'(ctx) {
+    const b = await ctx.browser('views')
+    const page = await b.newPage()
+    await page.goto(ctx.url + '#/today')
+    const input = page.getByLabel('Новая задача')
+    for (const s of ['SAT practice', 'эссе завтра', 'старая задача вчера', 'тренировка каждый день']) {
+      await input.fill(s)
+      await input.press('Enter')
+    }
+    await page.locator('[data-task-id]').filter({ hasText: 'SAT practice' }).waitFor()
+    await page.getByRole('button', { name: /С прошлых дней/ }).waitFor()
+    assert(!(await page.getByText('старая задача').isVisible()), 'просроченные свёрнуты')
+    assert(!(await page.getByText('эссе').isVisible()), 'завтрашней задачи нет в «Сегодня»')
+    await page.locator('[data-task-id]').filter({ hasText: 'SAT practice' }).getByRole('checkbox').click()
+    await page.getByRole('button', { name: /Сделано сегодня/ }).waitFor()
+    await page.screenshot({ path: ctx.out + '/today.png' })
+
+    await page.goto(ctx.url + '#/next7')
+    await page.getByRole('heading', { name: 'Следующие 7 дней' }).waitFor()
+    const tomorrow = page.locator('section').filter({ has: page.getByRole('button', { name: /^Завтра/ }) })
+    await tomorrow.getByText('эссе').waitFor()
+    await tomorrow.getByText('тренировка').waitFor() // будущий повтор
+    await page.screenshot({ path: ctx.out + '/next7.png', fullPage: true })
+
+    await page.goto(ctx.url + '#/done')
+    await page.locator('section').filter({ has: page.getByRole('button', { name: /^Сегодня/ }) }).getByText('SAT practice').waitFor()
+    assert(!b.errors.length, 'ошибки в консоли: ' + b.errors.join('; '))
+    await b.close()
+  },
 }

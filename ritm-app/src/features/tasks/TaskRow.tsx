@@ -1,6 +1,7 @@
 import type { Category, List, Priority, Task } from '../../db/types'
 import { completeTask, deleteTask, setTaskDone } from '../../db/tasks'
 import { diffDays, formatDayLabel, formatDuration, formatMinutes, todayStr } from '../../domain/dates'
+import { INBOX_ID } from '../../db/seed'
 import { describeRepeat } from '../../domain/repeat'
 import { Icon } from '../../ui/icons'
 import { ColorDot, cx } from '../../ui/kit'
@@ -84,6 +85,8 @@ export function TaskRow({
 }) {
   const done = task.status === 'done'
   const subDone = task.subtasks.filter((s) => s.done).length
+  // «Входящие» не подписываем — это список по умолчанию
+  if (list?.id === INBOX_ID) showList = false
   const hasMeta =
     (!hideDate && task.dueDate) || task.durationMin || task.subtasks.length || task.repeat || category || (showList && list) || task.note
   return (

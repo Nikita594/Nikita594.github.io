@@ -15,6 +15,9 @@ import { ListScreen } from '../features/lists/ListScreen'
 import { SearchScreen } from '../features/search/SearchScreen'
 import { SettingsScreen } from '../features/settings/SettingsScreen'
 import { TaskEditorHost } from '../features/tasks/TaskEditor'
+import { DoneScreen } from '../features/views/DoneScreen'
+import { Next7Screen } from '../features/views/Next7Screen'
+import { TodayScreen } from '../features/views/TodayScreen'
 
 function Placeholder({ title }: { title: string }) {
   return (
@@ -26,6 +29,12 @@ function Placeholder({ title }: { title: string }) {
 
 function renderScreen(route: Route): ReactNode {
   switch (route.name) {
+    case 'today':
+      return <TodayScreen />
+    case 'next7':
+      return <Next7Screen />
+    case 'done':
+      return <DoneScreen />
     case 'inbox':
       return <ListScreen listId={INBOX_ID} />
     case 'list':
