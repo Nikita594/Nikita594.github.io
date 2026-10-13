@@ -1,6 +1,7 @@
 import * as chrono from 'chrono-node/ru'
-import type { Category, DateStr, List, Minutes, Priority } from '../db/types'
-import { addDays, todayStr, toDateStr } from './dates'
+import type { Category, DateStr, List, Minutes, Priority, Repeat, Weekday } from '../db/types'
+import { addDays, todayStr, toDateStr, weekdayOf } from './dates'
+import { firstOccurrence, nextOccurrence } from './repeat'
 import { normalize } from './tasks'
 
 /**
@@ -10,7 +11,8 @@ import { normalize } from './tasks'
  *   длительность — «1ч», «1.5ч», «45м», «30 мин», «1ч30м», «на 2 часа», «полчаса»;
  *   приоритет   — «!1» высокий, «!2» средний, «!3» низкий, «!0» без приоритета;
  *   категория   — «#учёба» (регистр и ё/е не важны, можно начало слова: «#англ»);
- *   список      — «~школа».
+ *   список      — «~школа»;
+ *   повтор      — «каждый день», «по будням», «каждую пятницу», «по пн и чт», «каждые 3 дня», «каждый месяц».
  */
 
 export interface QuickAddResult {
@@ -19,6 +21,7 @@ export interface QuickAddResult {
   dueTime?: Minutes
   durationMin?: number
   priority?: Priority
+  repeat?: Repeat
   categoryId?: string
   listId?: string
   /** Что не удалось понять, например «#нечто» без такой категории. */
@@ -41,6 +44,48 @@ const WEEKDAY_DAT = ['понедельнику', 'вторнику', 'среде
 const WEEKDAY_GEN = ['понедельника', 'вторника', 'среды', 'четверга', 'пятницы', 'субботы', 'воскресенья']
 const WEEKDAY_SHORT = ['пн', 'вт', 'ср', 'чт', 'пт', 'сб', 'вс']
 const MONTH_GEN = ['января', 'февраля', 'марта', 'апреля', 'мая', 'июня', 'июля', 'августа', 'сентября', 'октября', 'ноября', 'декабря']
+
+const WEEKDAY_NOM = ['понедельник', 'вторник', 'среда', 'четверг', 'пятница', 'суббота', 'воскресенье']
+const WEEKDAY_DAT_PL = ['понедельникам', 'вторникам', 'средам', 'четвергам', 'пятницам', 'субботам', 'воскресеньям']
+
+/** Любая форма дня недели → номер 1..7. */
+function weekdayNumber(word: string): Weekday | undefined {
+  const w = word.toLowerCase()
+  for (const forms of [WEEKDAY_ACC, WEEKDAY_NOM, WEEKDAY_DAT_PL, WEEKDAY_SHORT]) {
+    const i = forms.indexOf(w)
+    if (i >= 0) return (i + 1) as Weekday
+  }
+  return undefined
+}
+const DAY_WORD = [...WEEKDAY_DAT_PL, ...WEEKDAY_ACC, ...WEEKDAY_NOM, ...WEEKDAY_SHORT].join('|')
+
+/** Ищет повтор, возвращает правило и вырезанный текст. Для «каждую неделю» и «каждый месяц» день берётся позже из срока. */
+function parseRepeat(text: string): { rule: Repeat | 'weekly-auto' | 'monthly-auto'; text: string } | undefined {
+  const tries: [RegExp, (m: RegExpExecArray) => Repeat | 'weekly-auto' | 'monthly-auto'][] = [
+    [re(`${B}(?:каждый\\s+будний\\s+день|по\\s+будням|в\\s+будни)${E}`), () => ({ kind: 'weekdays' })],
+    [re(`${B}(?:каждый\\s+день|ежедневно)${E}`), () => ({ kind: 'daily' })],
+    [
+      re(`${B}(?:каждые|каждый|раз\\s+в)\\s+(\\d+)\\s+(?:дня|дней|день)${E}`),
+      (m) => (Number(m[1]) === 1 ? { kind: 'daily' } : { kind: 'interval', every: Math.min(365, Number(m[1])) }),
+    ],
+    [re(`${B}(?:каждую\\s+неделю|еженедельно|раз\\s+в\\s+неделю)${E}`), () => 'weekly-auto'],
+    [re(`${B}(?:каждый\\s+месяц|ежемесячно|раз\\s+в\\s+месяц)${E}`), () => 'monthly-auto'],
+    [
+      re(`${B}(?:каждый|каждую|каждое|по)\\s+((?:${DAY_WORD})(?:\\s*(?:,|и)\\s*(?:${DAY_WORD}))*)${E}`),
+      (m) => {
+        const days = [...new Set(m[1].split(/\s*(?:,|\sи\s)\s*/u).map((w) => weekdayNumber(w.trim())))]
+          .filter((d): d is Weekday => d !== undefined)
+          .sort()
+        return { kind: 'weekly', days }
+      },
+    ],
+  ]
+  for (const [pattern, make] of tries) {
+    const m = pattern.exec(text)
+    if (m) return { rule: make(m), text: cut(text, m.index, m.index + m[0].length) }
+  }
+  return undefined
+}
 
 /** Одиночные слова, которые chrono принимает за дату, хотя в названии задачи это просто слово. */
 const NOT_A_DATE = new Set(['неделя', 'неделе', 'неделю', 'недели', 'месяц', 'месяца', 'месяце', 'год', 'года', 'день', 'дня', 'утро', 'вечер', 'ночь'])
@@ -147,13 +192,18 @@ export function parseQuickAdd(input: string, ctx: QuickAddContext = {}): QuickAd
     }
   }
 
-  // 4. Дата и время. chrono может вернуть дату и время отдельными кусками («завтра … в 18:00») — склеиваем.
+  // 4. Повтор (до дат: «каждую пятницу» не должно стать просто «в пятницу»)
+  const repeat = parseRepeat(text)
+  if (repeat) text = repeat.text
+
+  // 5. Дата и время. chrono может вернуть дату и время отдельными кусками («завтра … в 18:00») — склеиваем.
   text = rewrite(text)
   const today = todayStr(now)
   const parsed = chrono.casual.parse(text, now, { forwardDate: true }).filter((r) => !NOT_A_DATE.has(normalize(r.text)))
   const hasDate = (r: chrono.ParsedResult) => r.start.isCertain('day') || r.start.isCertain('weekday') || r.start.isCertain('month')
   const dateRes = parsed.find(hasDate)
   const timeRes = dateRes?.start.isCertain('hour') ? dateRes : parsed.find((r) => r.start.isCertain('hour') && !hasDate(r))
+  const dateFromText = !!dateRes
   if (dateRes || timeRes) {
     let date = dateRes ? toDateStr(dateRes.start.date()) : today
     if (timeRes) {
@@ -177,6 +227,24 @@ export function parseQuickAdd(input: string, ctx: QuickAddContext = {}): QuickAd
       // предлог прямо перед датой тоже убираем: «сделать до | пятницы»
       const head = text.slice(0, r.index).replace(re(`${B}(?:в|во|до|к|ко|на)\\s*$`), '')
       text = head + ' ' + text.slice(r.index + r.text.length)
+    }
+  }
+
+  // У повторяющейся задачи всегда есть срок: если дата не названа — первый повтор начиная с сегодня.
+  if (repeat) {
+    const base = result.dueDate ?? today
+    const rule: Repeat =
+      repeat.rule === 'weekly-auto'
+        ? { kind: 'weekly', days: [weekdayOf(base)] }
+        : repeat.rule === 'monthly-auto'
+          ? { kind: 'monthly', day: Number(base.slice(8, 10)) }
+          : repeat.rule
+    result.repeat = rule
+    if (!dateFromText) {
+      let first = firstOccurrence(rule, today) ?? today
+      const nowMin = now.getHours() * 60 + now.getMinutes()
+      if (first === today && result.dueTime !== undefined && result.dueTime <= nowMin) first = nextOccurrence(rule, today) ?? today
+      result.dueDate = first
     }
   }
 

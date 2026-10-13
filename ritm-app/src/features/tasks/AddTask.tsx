@@ -3,6 +3,7 @@ import { useCategories, useLists } from '../../db/hooks'
 import { createTask, type NewTask } from '../../db/tasks'
 import { formatDayLabel, formatDuration, formatMinutes } from '../../domain/dates'
 import { parseQuickAdd, type QuickAddResult } from '../../domain/quickAdd'
+import { describeRepeat } from '../../domain/repeat'
 import { PRIORITY_LABELS } from '../../domain/tasks'
 import { Icon, type IconName } from '../../ui/icons'
 import { cx } from '../../ui/kit'
@@ -29,6 +30,7 @@ export function ParsePreview({ parsed }: { parsed: QuickAddResult }) {
         {parsed.dueTime !== undefined && ` ${formatMinutes(parsed.dueTime)}`}
       </Chip>,
     )
+  if (parsed.repeat) chips.push(<Chip key="r" icon="repeat">{describeRepeat(parsed.repeat)}</Chip>)
   if (parsed.durationMin) chips.push(<Chip key="t" icon="clock">{formatDuration(parsed.durationMin)}</Chip>)
   if (parsed.priority !== undefined) chips.push(<Chip key="p" icon="flag">{PRIORITY_LABELS[parsed.priority]}</Chip>)
   const cat = cats.find((c) => c.id === parsed.categoryId)
@@ -53,6 +55,7 @@ export async function createFromQuickAdd(parsed: QuickAddResult, defaults: Parti
     fields.dueDate = parsed.dueDate
     fields.dueTime = parsed.dueTime
   }
+  if (parsed.repeat) fields.repeat = parsed.repeat
   if (parsed.durationMin) fields.durationMin = parsed.durationMin
   if (parsed.priority !== undefined) fields.priority = parsed.priority
   if (parsed.categoryId) fields.categoryId = parsed.categoryId
@@ -121,6 +124,7 @@ function QuickAddHelp() {
   const rows: [string, string][] = [
     ['завтра, в пятницу, через 3 дня, 20.10', 'срок'],
     ['в 18:00, в 7 вечера, в 9:30', 'время'],
+    ['каждый день, по будням, каждую пятницу, каждые 3 дня', 'повтор'],
     ['1ч, 45м, 1ч30м, на 2 часа', 'длительность'],
     ['!1, !2, !3', 'приоритет: высокий, средний, низкий'],
     ['#учёба, #англ', 'категория'],

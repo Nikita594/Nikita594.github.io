@@ -2,7 +2,7 @@ import 'fake-indexeddb/auto'
 import { beforeEach, describe, expect, it } from 'vitest'
 import { db } from './db'
 import { INBOX_ID } from './seed'
-import { addSubtask, createList, createTask, deleteList, deleteTask, moveTask, patchSubtask, setTaskDone } from './tasks'
+import { addSubtask, completeTask, createList, createTask, deleteList, deleteTask, moveTask, patchSubtask, setTaskDone } from './tasks'
 
 beforeEach(async () => {
   await db.delete()
@@ -77,5 +77,52 @@ describe('списки', () => {
   it('«Входящие» удалить нельзя', async () => {
     await deleteList(INBOX_ID)
     expect(await db.lists.get(INBOX_ID)).toBeDefined()
+  })
+})
+
+describe('повторяющиеся задачи', () => {
+  const now = new Date(2026, 9, 13, 20, 0) // вторник
+
+  it('выполнение оставляет запись в истории и переносит задачу на следующий раз', async () => {
+    const t = await createTask({
+      title: 'Английский',
+      dueDate: '2026-10-13',
+      dueTime: 1080,
+      repeat: { kind: 'weekdays' },
+      subtasks: [{ id: 's', title: 'слова', done: true }],
+    })
+    const { nextDue } = await completeTask(t.id, now)
+    expect(nextDue).toBe('2026-10-14')
+    const series = (await db.tasks.get(t.id))!
+    expect(series.status).toBe('open')
+    expect(series.dueDate).toBe('2026-10-14')
+    expect(series.dueTime).toBe(1080)
+    expect(series.subtasks[0].done).toBe(false)
+    const history = await db.tasks.where('repeatOf').equals(t.id).toArray()
+    expect(history).toHaveLength(1)
+    expect(history[0]).toMatchObject({ status: 'done', dueDate: '2026-10-13', title: 'Английский' })
+    expect(history[0].repeat).toBeUndefined()
+  })
+
+  it('«Вернуть» отменяет перенос и убирает запись из истории', async () => {
+    const t = await createTask({ title: 'SAT', dueDate: '2026-10-13', repeat: { kind: 'daily' } })
+    const { undo } = await completeTask(t.id, now)
+    await undo()
+    expect((await db.tasks.get(t.id))?.dueDate).toBe('2026-10-13')
+    expect(await db.tasks.where('repeatOf').equals(t.id).count()).toBe(0)
+  })
+
+  it('последний повтор серии — задача просто выполнена', async () => {
+    const t = await createTask({ title: 'Курс', dueDate: '2026-10-13', repeat: { kind: 'daily', until: '2026-10-13' } })
+    const { nextDue } = await completeTask(t.id, now)
+    expect(nextDue).toBeUndefined()
+    expect((await db.tasks.get(t.id))?.status).toBe('done')
+  })
+
+  it('обычная задача просто выполнена', async () => {
+    const t = await createTask({ title: 'Разовая' })
+    await completeTask(t.id, now)
+    expect((await db.tasks.get(t.id))?.status).toBe('done')
+    expect(await db.tasks.count()).toBe(1)
   })
 })

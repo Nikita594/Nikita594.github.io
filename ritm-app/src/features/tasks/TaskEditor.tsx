@@ -72,11 +72,11 @@ function AutoTextarea(props: { value: string; onChange: (v: string) => void; onB
 function Row({ icon, label, children }: { icon: Parameters<typeof Icon>[0]['name']; label: string; children: React.ReactNode }) {
   return (
     <div className="flex min-h-10 items-center gap-3 border-b border-line py-1.5 last:border-0">
-      <span className="flex w-28 shrink-0 items-center gap-2 text-sm text-muted">
-        <Icon name={icon} size={16} />
+      <span className="flex w-[7.5rem] shrink-0 items-center gap-2 text-sm text-muted">
+        <Icon name={icon} size={16} className="shrink-0" />
         {label}
       </span>
-      <div className="flex min-w-0 flex-1 flex-wrap items-center gap-2">{children}</div>
+      <div className="flex min-w-0 flex-1 flex-wrap items-center gap-1.5">{children}</div>
     </div>
   )
 }
@@ -130,7 +130,7 @@ function TaskEditor({ task }: { task: Task }) {
             <input
               type="date"
               aria-label="Дата"
-              className={selectCls}
+              className={cx(selectCls, 'w-[8.5rem]')}
               value={task.dueDate ?? ''}
               onChange={(e) => set(e.target.value ? { dueDate: e.target.value } : { dueDate: undefined, dueTime: undefined, repeat: undefined })}
             />
@@ -138,7 +138,7 @@ function TaskEditor({ task }: { task: Task }) {
               <input
                 type="time"
                 aria-label="Время"
-                className={selectCls}
+                className={cx(selectCls, 'w-[6rem]')}
                 value={task.dueTime !== undefined ? formatMinutes(task.dueTime) : ''}
                 onChange={(e) => set({ dueTime: parseHHMM(e.target.value) })}
               />

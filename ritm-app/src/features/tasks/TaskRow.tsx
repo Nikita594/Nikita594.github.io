@@ -1,6 +1,7 @@
 import type { Category, List, Priority, Task } from '../../db/types'
-import { deleteTask, setTaskDone } from '../../db/tasks'
+import { completeTask, deleteTask, setTaskDone } from '../../db/tasks'
 import { diffDays, formatDayLabel, formatDuration, formatMinutes, todayStr } from '../../domain/dates'
+import { describeRepeat } from '../../domain/repeat'
 import { Icon } from '../../ui/icons'
 import { ColorDot, cx } from '../../ui/kit'
 import { toast } from '../../ui/toast'
@@ -42,9 +43,12 @@ export function TaskCheckbox({ task, onToggle }: { task: Task; onToggle?: (done:
 }
 
 export async function toggleTask(task: Task) {
-  const done = task.status !== 'done'
-  await setTaskDone(task.id, done)
-  if (done) toast('Готово', { label: 'Вернуть', run: () => void setTaskDone(task.id, false) })
+  if (task.status === 'done') {
+    await setTaskDone(task.id, false)
+    return
+  }
+  const { nextDue, undo } = await completeTask(task.id)
+  toast(nextDue ? `Готово. Следующий раз — ${formatDayLabel(nextDue).toLowerCase()}` : 'Готово', { label: 'Вернуть', run: () => void undo() })
 }
 
 export async function removeTask(task: Task) {
@@ -57,7 +61,7 @@ export function DueLabel({ task, today = todayStr() }: { task: Task; today?: str
   const diff = diffDays(task.dueDate, today)
   const overdue = task.status === 'open' && diff < 0
   return (
-    <span className={cx('inline-flex items-center gap-1', overdue ? 'text-p2' : diff === 0 ? 'text-accent' : '')}>
+    <span className={cx('inline-flex items-center gap-1', overdue ? 'text-p2' : diff === 0 && task.status === 'open' ? 'text-accent' : '')}>
       <Icon name="calendar" size={13} />
       {formatDayLabel(task.dueDate, today)}
       {task.dueTime !== undefined && ` ${formatMinutes(task.dueTime)}`}
@@ -113,7 +117,12 @@ export function TaskRow({
                 {subDone}/{task.subtasks.length}
               </span>
             )}
-            {task.repeat && <Icon name="repeat" size={13} aria-label="Повторяется" />}
+            {task.repeat && (
+              <span className="inline-flex items-center gap-1" title={describeRepeat(task.repeat)}>
+                <Icon name="repeat" size={13} />
+                <span className="sr-only">{describeRepeat(task.repeat)}</span>
+              </span>
+            )}
             {task.note && <Icon name="note" size={13} aria-label="Есть заметка" />}
             {category && (
               <span className="inline-flex items-center gap-1">

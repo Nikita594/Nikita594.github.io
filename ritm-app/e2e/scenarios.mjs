@@ -138,4 +138,30 @@ export const scenarios = {
     assert(!b.errors.length, 'ошибки в консоли: ' + b.errors.join('; '))
     await b.close()
   },
+
+  async 'Повтор: выполненная задача переезжает на следующий день, запись остаётся в истории'(ctx) {
+    const b = await ctx.browser('repeat')
+    const page = await b.newPage()
+    await page.goto(ctx.url + '#/inbox')
+    const input = page.getByLabel('Новая задача')
+    await input.fill('зарядка каждый день')
+    await page.getByText('Каждый день', { exact: true }).waitFor()
+    await input.press('Enter')
+    const row = page.locator('[data-task-id]').filter({ hasText: 'зарядка' })
+    await row.getByText('Сегодня').waitFor()
+    await row.getByRole('checkbox').click()
+    await page.getByText(/Следующий раз — завтра/).waitFor()
+    await page.locator('[data-task-id]').filter({ hasText: 'зарядка' }).getByText('Завтра').waitFor()
+    await page.getByRole('button', { name: /Выполнено/ }).click()
+    const doneRows = page.locator('[data-task-id]').filter({ hasText: 'зарядка' })
+    assert((await doneRows.count()) === 2, 'одна задача в работе и одна запись в выполненных')
+    // настройка повтора в редакторе
+    await page.locator('[data-task-id]').filter({ hasText: 'зарядка' }).first().click()
+    const editor = page.getByRole('dialog', { name: 'Задача' })
+    await editor.getByLabel('Повтор', { exact: true }).selectOption('weekly')
+    await editor.getByRole('group', { name: 'Дни недели' }).waitFor()
+    await page.screenshot({ path: ctx.out + '/repeat-editor.png' })
+    assert(!b.errors.length, 'ошибки в консоли: ' + b.errors.join('; '))
+    await b.close()
+  },
 }
