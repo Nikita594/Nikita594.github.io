@@ -121,4 +121,21 @@ export const scenarios = {
     assert(!b.errors.length, 'ошибки в консоли: ' + b.errors.join('; '))
     await b.close()
   },
+
+  async 'Быстрый ввод разбирает фразу и показывает, что понял'(ctx) {
+    const b = await ctx.browser('quick')
+    const page = await b.newPage()
+    await page.goto(ctx.url + '#/inbox')
+    const input = page.getByLabel('Новая задача')
+    await input.fill('английский завтра в 18:00 1ч !2 #учёба')
+    for (const chip of ['Завтра 18:00', '1 ч', 'Средний', 'Учёба']) await page.getByText(chip, { exact: true }).waitFor()
+    await page.screenshot({ path: ctx.out + '/quick-add.png' })
+    await input.press('Enter')
+    const row = page.locator('[data-task-id]').filter({ hasText: 'английский' })
+    await row.waitFor()
+    const text = await row.innerText()
+    assert(/Завтра 18:00/.test(text) && /1 ч/.test(text) && /Учёба/.test(text), 'в строке задачи: ' + text)
+    assert(!b.errors.length, 'ошибки в консоли: ' + b.errors.join('; '))
+    await b.close()
+  },
 }

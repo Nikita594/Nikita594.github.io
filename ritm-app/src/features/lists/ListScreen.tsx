@@ -12,10 +12,15 @@ import { Section, TaskList } from '../tasks/TaskList'
 import { ListEditor } from './ListEditor'
 
 export function ListScreen({ listId }: { listId: string }) {
-  const list = useLiveQuery(() => db.lists.get(listId), [listId])
-  const tasks = useLiveQuery(() => db.tasks.where('listId').equals(listId).toArray(), [listId])
+  // список и задачи читаем одним запросом, чтобы экран не мигал «Список не найден» во время загрузки
+  const data = useLiveQuery(
+    async () => ({ list: await db.lists.get(listId), tasks: await db.tasks.where('listId').equals(listId).toArray() }),
+    [listId],
+  )
+  const list = data?.list
+  const tasks = data?.tasks
   const [editing, setEditing] = useState(false)
-  if (list === undefined && tasks !== undefined) {
+  if (data && !list) {
     return (
       <Screen title="Список не найден">
         <Empty title="Такого списка нет">Возможно, его удалили.</Empty>
