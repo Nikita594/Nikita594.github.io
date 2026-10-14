@@ -89,7 +89,11 @@ function record(st: PomodoroState, focusedMs: number, end: Moment): FocusRecord 
  * Если фаза закончилась к моменту now — переходим к следующей.
  * Запись фокуса заканчивается в момент окончания фазы, а не «сейчас» (приложение могло быть закрыто).
  */
-export function tick(st: PomodoroState, now: Moment, s: PomodoroSettings): { state: PomodoroState; record?: FocusRecord; finished?: Phase } {
+export function tick(
+  st: PomodoroState,
+  now: Moment,
+  s: PomodoroSettings,
+): { state: PomodoroState; record?: FocusRecord; finished?: Phase } {
   const end = endsAt(st)
   if (end === undefined || now < end) return { state: st }
   return { state: nextPhase(st, s, true), record: record(st, st.durationMs, end), finished: st.phase }

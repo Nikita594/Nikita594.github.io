@@ -6,6 +6,7 @@ import { doneOn, dueOn, overdue } from '../../domain/views'
 import { useToday } from '../../lib/useToday'
 import { Empty } from '../../ui/kit'
 import { Screen } from '../../ui/Screen'
+import { TodayHabits } from '../habits/TodayHabits'
 import { AddTask } from '../tasks/AddTask'
 import { Section, TaskList } from '../tasks/TaskList'
 
@@ -32,6 +33,7 @@ export function TodayScreen() {
         </Empty>
       )}
       <TaskList tasks={now} hideDate showList />
+      <TodayHabits today={today} />
       {late.length > 0 && (
         <Section title="С прошлых дней" defaultOpen={false}>
           <TaskList tasks={late} showList />

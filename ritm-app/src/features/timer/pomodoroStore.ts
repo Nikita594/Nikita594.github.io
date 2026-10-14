@@ -18,8 +18,15 @@ import {
 
 // Состояние таймера хранится в настройках (ключ 'pomodoro'), поэтому переживает перезагрузку.
 
-export function pomodoroSettings(s: Pick<Settings, 'pomodoroFocusMin' | 'pomodoroShortBreakMin' | 'pomodoroLongBreakMin' | 'pomodoroLongEvery'>): PomodoroSettings {
-  return { focusMin: s.pomodoroFocusMin, shortMin: s.pomodoroShortBreakMin, longMin: s.pomodoroLongBreakMin, longEvery: s.pomodoroLongEvery }
+export function pomodoroSettings(
+  s: Pick<Settings, 'pomodoroFocusMin' | 'pomodoroShortBreakMin' | 'pomodoroLongBreakMin' | 'pomodoroLongEvery'>,
+): PomodoroSettings {
+  return {
+    focusMin: s.pomodoroFocusMin,
+    shortMin: s.pomodoroShortBreakMin,
+    longMin: s.pomodoroLongBreakMin,
+    longEvery: s.pomodoroLongEvery,
+  }
 }
 
 async function loadSettings(): Promise<PomodoroSettings> {

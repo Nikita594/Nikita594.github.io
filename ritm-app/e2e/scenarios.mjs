@@ -352,4 +352,42 @@ export const scenarios = {
     assert(!b.errors.length, 'ошибки в консоли: ' + b.errors.join('; '))
     await b.close()
   },
+
+  async 'Привычки: создать, отметить, серия, отметка с экрана «Сегодня»'(ctx) {
+    const b = await ctx.browser('habits', { viewport: { width: 375, height: 740 } })
+    const page = await b.newPage()
+    await page.goto(ctx.url + '#/habits')
+    await page.getByText('Привычек пока нет').waitFor()
+    await page.getByRole('button', { name: 'Добавить привычку' }).click()
+    const dialog = page.getByRole('dialog', { name: 'Новая привычка' })
+    await dialog.getByPlaceholder('Например, 20 новых слов').fill('Слова')
+    await dialog.getByRole('button', { name: 'Создать' }).click()
+    const row = page.locator('[data-habit="Слова"]')
+    await row.waitFor()
+    // отметить вчера и сегодня → серия 2 дня
+    await row.getByRole('button', { name: 'Слова, Вчера' }).click()
+    await row.getByRole('button', { name: 'Слова, Сегодня' }).click()
+    await row.getByText('Серия: 2 дня').waitFor()
+    const overflow = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth)
+    assert(overflow <= 0, `страница шире экрана на ${overflow}px`)
+    await page.screenshot({ path: ctx.out + '/habits.png' })
+
+    // на «Сегодня» привычка уже отмечена; снимаем отметку оттуда
+    await page.goto(ctx.url + '#/today')
+    const cell = page.getByRole('button', { name: 'Слова, Сегодня: отмечено' })
+    await cell.waitFor()
+    await cell.click()
+    await page.getByRole('button', { name: 'Слова, Сегодня', exact: true }).waitFor()
+    await page.goto(ctx.url + '#/habits')
+    await page.locator('[data-habit="Слова"]').getByText('Серия: 1 день').waitFor()
+
+    // статистика в окне привычки
+    await page
+      .locator('[data-habit="Слова"]')
+      .getByRole('button', { name: /Слова Серия/ })
+      .click()
+    await page.getByRole('dialog', { name: 'Привычка' }).getByText('Лучшая').waitFor()
+    assert(!b.errors.length, 'ошибки в консоли: ' + b.errors.join('; '))
+    await b.close()
+  },
 }

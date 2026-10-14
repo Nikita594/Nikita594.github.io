@@ -1,5 +1,6 @@
 import type { DateStr, Repeat, Weekday } from '../db/types'
 import { addDays, fromDateStr, toDateStr, WEEKDAY_SHORT, weekdayOf } from './dates'
+import { plural } from './text'
 
 /** Есть ли повтор в этот день (если серия начинается с anchor). */
 export function occursOn(rule: Repeat, anchor: DateStr, date: DateStr): boolean {
@@ -80,14 +81,6 @@ export function nextDueAfterDone(rule: Repeat, due: DateStr, today: DateStr): Da
 }
 
 const WEEKDAY_NAMES_ACC = ['понедельник', 'вторник', 'среду', 'четверг', 'пятницу', 'субботу', 'воскресенье']
-
-function plural(n: number, one: string, few: string, many: string) {
-  const a = n % 10
-  const b = n % 100
-  if (a === 1 && b !== 11) return one
-  if (a >= 2 && a <= 4 && (b < 12 || b > 14)) return few
-  return many
-}
 
 /** «Каждый день», «По будням», «Пн, ср, пт», «Каждые 3 дня», «Каждый месяц, 15-го». */
 export function describeRepeat(rule: Repeat): string {

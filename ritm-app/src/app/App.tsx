@@ -20,6 +20,7 @@ import { WeekScreen } from '../features/calendar/WeekScreen'
 import { PomodoroRunner } from '../features/timer/PomodoroRunner'
 import { useTimerLabel } from '../features/timer/TimerBadge'
 import { TimerScreen } from '../features/timer/TimerScreen'
+import { HabitsScreen } from '../features/habits/HabitsScreen'
 import { Next7Screen } from '../features/views/Next7Screen'
 import { TodayScreen } from '../features/views/TodayScreen'
 
@@ -43,6 +44,8 @@ function renderScreen(route: Route): ReactNode {
       return <WeekScreen />
     case 'timer':
       return <TimerScreen />
+    case 'habits':
+      return <HabitsScreen />
     case 'inbox':
       return <ListScreen listId={INBOX_ID} />
     case 'list':

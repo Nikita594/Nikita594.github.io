@@ -1,6 +1,7 @@
 import 'fake-indexeddb/auto'
 import { beforeEach, describe, expect, it } from 'vitest'
 import { placeTask } from './blocks'
+import { createHabit, deleteHabit, toggleCheck } from './habits'
 import { db } from './db'
 import { INBOX_ID } from './seed'
 import { addSubtask, completeTask, createList, createTask, deleteList, deleteTask, moveTask, patchSubtask, setTaskDone } from './tasks'
@@ -139,5 +140,26 @@ describe('календарь', () => {
     const t = await createTask({ title: 'Чтение' })
     const block = await placeTask(t, '2026-10-15', 23 * 60 + 30)
     expect(block).toMatchObject({ startMin: 23 * 60, endMin: 24 * 60 })
+  })
+})
+
+describe('привычки', () => {
+  it('отметка ставится и снимается', async () => {
+    const h = await createHabit('Слова', '#7c3aed', [])
+    expect(await toggleCheck(h.id, '2026-10-13')).toBe(true)
+    expect(await db.habitChecks.count()).toBe(1)
+    expect(await toggleCheck(h.id, '2026-10-13')).toBe(false)
+    expect(await db.habitChecks.count()).toBe(0)
+  })
+  it('удаление вместе с отметками можно отменить', async () => {
+    const h = await createHabit('Зарядка', '#16a34a', [1, 3, 5])
+    await toggleCheck(h.id, '2026-10-12')
+    await toggleCheck(h.id, '2026-10-14')
+    const undo = await deleteHabit(h.id)
+    expect(await db.habits.count()).toBe(0)
+    expect(await db.habitChecks.count()).toBe(0)
+    await undo()
+    expect((await db.habits.get(h.id))?.days).toEqual([1, 3, 5])
+    expect(await db.habitChecks.count()).toBe(2)
   })
 })

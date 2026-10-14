@@ -57,7 +57,15 @@ export function TimerScreen() {
   const tasks = useLiveQuery(() => db.tasks.where('status').equals('open').sortBy('title'), []) ?? []
   const allTasks = useById(useLiveQuery(() => db.tasks.toArray(), []) ?? [])
   const dayStart = fromDateStr(today).setHours(0, 0, 0, 0)
-  const entries = useLiveQuery(() => db.entries.where('start').between(dayStart, dayStart + 86_400_000, true, false).sortBy('start'), [dayStart]) ?? []
+  const entries =
+    useLiveQuery(
+      () =>
+        db.entries
+          .where('start')
+          .between(dayStart, dayStart + 86_400_000, true, false)
+          .sortBy('start'),
+      [dayStart],
+    ) ?? []
   const [manual, setManual] = useState(false)
   useTicker(st?.status === 'running')
 
@@ -150,7 +158,11 @@ export function TimerScreen() {
             </select>
           </Field>
           <Field label="Категория">
-            <select className={inputCls} value={st.categoryId ?? ''} onChange={(e) => void pomodoro.setTarget(st.taskId, e.target.value || undefined)}>
+            <select
+              className={inputCls}
+              value={st.categoryId ?? ''}
+              onChange={(e) => void pomodoro.setTarget(st.taskId, e.target.value || undefined)}
+            >
               <option value="">без категории</option>
               {categories.map((c) => (
                 <option key={c.id} value={c.id}>
@@ -161,7 +173,11 @@ export function TimerScreen() {
           </Field>
         </div>
         {notifyAvailable && (
-          <button type="button" className="mt-3 text-xs text-muted underline-offset-2 hover:underline" onClick={() => void Notification.requestPermission()}>
+          <button
+            type="button"
+            className="mt-3 text-xs text-muted underline-offset-2 hover:underline"
+            onClick={() => void Notification.requestPermission()}
+          >
             Показывать уведомление, когда время выйдет
           </button>
         )}
@@ -174,7 +190,12 @@ export function TimerScreen() {
         </div>
         {!entries.length && <Empty title="Сегодня время ещё не записано">Запустите таймер или добавьте время вручную.</Empty>}
         {entries.map((e) => (
-          <EntryRow key={e.id} entry={e} category={e.categoryId ? catById.get(e.categoryId) : undefined} taskTitle={e.taskId ? allTasks.get(e.taskId)?.title : undefined} />
+          <EntryRow
+            key={e.id}
+            entry={e}
+            category={e.categoryId ? catById.get(e.categoryId) : undefined}
+            taskTitle={e.taskId ? allTasks.get(e.taskId)?.title : undefined}
+          />
         ))}
       </section>
 
@@ -232,7 +253,13 @@ export function ManualEntry({ onClose, defaults }: { onClose: () => void; defaul
     if (!valid || s === undefined || e === undefined) return
     const base = fromDateStr(date).setHours(0, 0, 0, 0)
     const startMs = base + s * 60_000
-    await addEntry({ start: startMs, end: startMs + minutes * 60_000, categoryId: categoryId || undefined, taskId: taskId || undefined, source: 'manual' })
+    await addEntry({
+      start: startMs,
+      end: startMs + minutes * 60_000,
+      categoryId: categoryId || undefined,
+      taskId: taskId || undefined,
+      source: 'manual',
+    })
     toast(`Добавлено ${formatDuration(minutes)}`)
     onClose()
   }
@@ -283,7 +310,13 @@ export function ManualEntry({ onClose, defaults }: { onClose: () => void; defaul
         </Field>
         <div className="grid grid-cols-3 gap-2">
           <Field label="День">
-            <input type="date" className={inputCls} value={date} max={addDays(todayStr(), 1)} onChange={(ev) => ev.target.value && setDate(ev.target.value)} />
+            <input
+              type="date"
+              className={inputCls}
+              value={date}
+              max={addDays(todayStr(), 1)}
+              onChange={(ev) => ev.target.value && setDate(ev.target.value)}
+            />
           </Field>
           <Field label="С">
             <input type="time" className={inputCls} value={start} onChange={(ev) => setStart(ev.target.value)} />
@@ -292,7 +325,9 @@ export function ManualEntry({ onClose, defaults }: { onClose: () => void; defaul
             <input type="time" className={inputCls} value={end} onChange={(ev) => setEnd(ev.target.value)} />
           </Field>
         </div>
-        <p className="-mt-2 text-xs text-muted">{valid ? `Будет записано ${formatDuration(minutes)}` : 'Проверьте время: от минуты до 16 часов.'}</p>
+        <p className="-mt-2 text-xs text-muted">
+          {valid ? `Будет записано ${formatDuration(minutes)}` : 'Проверьте время: от минуты до 16 часов.'}
+        </p>
       </div>
     </Modal>
   )

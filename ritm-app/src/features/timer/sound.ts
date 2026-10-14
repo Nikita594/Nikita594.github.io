@@ -34,7 +34,8 @@ export function chime() {
 
 export function notify(title: string, body: string) {
   try {
-    if ('Notification' in window && Notification.permission === 'granted' && document.visibilityState !== 'visible') new Notification(title, { body })
+    if ('Notification' in window && Notification.permission === 'granted' && document.visibilityState !== 'visible')
+      new Notification(title, { body })
   } catch {
     /* на iPhone уведомления работают только у установленного приложения */
   }
