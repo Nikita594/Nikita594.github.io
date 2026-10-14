@@ -23,6 +23,8 @@ export const DEFAULT_SETTINGS = {
   /** Когда последний раз сохраняли резервную копию (мс) и когда нажали «Позже». */
   lastBackupAt: 0 as number,
   backupSnoozedUntil: 0 as number,
+  /** Когда приложение запустили впервые на этом устройстве. */
+  installedAt: 0 as number,
   /** Состояние таймера помодоро, чтобы он пережил перезагрузку. */
   pomodoro: null as unknown,
 }

@@ -23,4 +23,6 @@ export async function seed(tx: Transaction) {
   const inbox: List = { id: INBOX_ID, name: 'Входящие', color: '#64748b', order: 0, createdAt: now }
   await tx.table('lists').add(inbox)
   await tx.table('categories').bulkAdd(BUILTIN_CATEGORIES.map((c, i) => ({ ...c, order: i })))
+  // от этой даты отсчитываем первое напоминание о резервной копии
+  await tx.table('settings').put({ key: 'installedAt', value: now })
 }
