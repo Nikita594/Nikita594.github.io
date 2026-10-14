@@ -337,6 +337,7 @@ export const scenarios = {
     // перезагрузка: запись и перерыв на месте
     await page.reload()
     await page.getByRole('button', { name: 'Начать перерыв' }).waitFor()
+    await page.locator('[data-entry-id]').first().waitFor()
     assert((await page.locator('[data-entry-id]').count()) === 1, 'запись пережила перезагрузку')
 
     // ручной ввод
