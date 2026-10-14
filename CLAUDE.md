@@ -27,9 +27,10 @@ Recharts — добавить в версии 2 для графиков. Нов�
 | `npm run build` | PWA-сборка в `dist/` |
 | `npm run build:single` | однофайловая сборка в `dist-single/index.html` |
 | `npm run release` | обе сборки + копирование в `../ritm/` (`ritm/ritm-offline.html` — один файл) |
+| `npm run check` | всё сразу: типы, тесты, обе сборки, e2e |
 | `npm run e2e` | проверки в Chromium: офлайн, file://, 375 px и т. д. Нужны собранные `dist/` и `dist-single/`. В облачной среде: `PLAYWRIGHT_PATH=/opt/node22/lib/node_modules/playwright npm run e2e` |
 
-После каждого шага: `npm run typecheck && npm test`, сборка, `npm run e2e`, отдельный коммит.
+После каждого шага: `npm run check` (типы → тесты → обе сборки → e2e, останавливается на первой ошибке; в облаке с `PLAYWRIGHT_PATH=…`), затем отдельный коммит. Не коммитить, если `check` упал (не прятать код выхода за `| tail`).
 Форматирование: `prettier --write "src/**/*.{ts,tsx,css}" "e2e/*.mjs"` (настройки в `.prettierrc`: без `;`, одинарные кавычки, ширина 140).
 
 ## Устройство кода

@@ -12,7 +12,8 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
-    "e2e": "node e2e/run.mjs"
+    "e2e": "node e2e/run.mjs",
+    "check": "tsc --noEmit && vitest run && vite build && vite build --mode single && node e2e/run.mjs"
   },
   "dependencies": {
     "chrono-node": "2.10.3",
