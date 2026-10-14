@@ -97,11 +97,14 @@ export function AddTask({
   placeholder = 'Добавить задачу',
   autoFocus,
   onCreated,
+  compact,
 }: {
   defaults?: Partial<NewTask>
   placeholder?: string
   autoFocus?: boolean
   onCreated?: () => void
+  /** Без кнопки «Как писать» — для тесных мест. */
+  compact?: boolean
 }) {
   const [text, setText] = useState('')
   const [help, setHelp] = useState(false)
@@ -138,14 +141,16 @@ export function AddTask({
           enterKeyHint="done"
           className="h-11 min-w-0 flex-1 bg-transparent text-sm outline-none placeholder:text-faint"
         />
-        <button
-          type="button"
-          onClick={() => setHelp(!help)}
-          aria-expanded={help}
-          className="shrink-0 rounded-md px-1.5 text-xs text-faint hover:text-text"
-        >
-          Как писать
-        </button>
+        {!compact && (
+          <button
+            type="button"
+            onClick={() => setHelp(!help)}
+            aria-expanded={help}
+            className="shrink-0 rounded-md px-1.5 text-xs text-faint hover:text-text"
+          >
+            Как писать
+          </button>
+        )}
       </div>
       {text.trim() && <ParsePreview parsed={parsed} />}
       {help && <QuickAddHelp />}

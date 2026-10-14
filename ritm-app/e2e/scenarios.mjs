@@ -390,4 +390,30 @@ export const scenarios = {
     assert(!b.errors.length, 'ошибки в консоли: ' + b.errors.join('; '))
     await b.close()
   },
+
+  async 'Матрица: задачи по квадрантам, перетаскивание меняет приоритет и срок'(ctx) {
+    const b = await ctx.browser('matrix')
+    const page = await b.newPage()
+    await page.goto(ctx.url + '#/matrix')
+    const q = (n) => page.locator(`[data-quadrant="${n}"]`)
+    await q(1).waitFor()
+    // задача, добавленная в квадрант, туда и попадает
+    await q(4).getByLabel('Новая задача').fill('прочитать книгу')
+    await q(4).getByLabel('Новая задача').press('Enter')
+    await q(4).getByText('прочитать книгу').waitFor()
+    await q(1).getByLabel('Новая задача').fill('эссе')
+    await q(1).getByLabel('Новая задача').press('Enter')
+    await q(1).getByText('эссе').waitFor()
+    // из «потом» в «срочно и важно»
+    await q(4).locator('[draggable]').filter({ hasText: 'прочитать книгу' }).dragTo(q(1))
+    await q(1).getByText('прочитать книгу').waitFor()
+    await page.getByText(/приоритет: высокий, срок: сегодня/).waitFor()
+    assert((await q(4).getByText('прочитать книгу').count()) === 0, 'ушла из четвёртого квадранта')
+    // «Вернуть»
+    await page.getByRole('button', { name: 'Вернуть' }).click()
+    await q(4).getByText('прочитать книгу').waitFor()
+    await page.screenshot({ path: ctx.out + '/matrix.png' })
+    assert(!b.errors.length, 'ошибки в консоли: ' + b.errors.join('; '))
+    await b.close()
+  },
 }

@@ -21,6 +21,7 @@ import { PomodoroRunner } from '../features/timer/PomodoroRunner'
 import { useTimerLabel } from '../features/timer/TimerBadge'
 import { TimerScreen } from '../features/timer/TimerScreen'
 import { HabitsScreen } from '../features/habits/HabitsScreen'
+import { MatrixScreen } from '../features/matrix/MatrixScreen'
 import { Next7Screen } from '../features/views/Next7Screen'
 import { TodayScreen } from '../features/views/TodayScreen'
 
@@ -46,6 +47,8 @@ function renderScreen(route: Route): ReactNode {
       return <TimerScreen />
     case 'habits':
       return <HabitsScreen />
+    case 'matrix':
+      return <MatrixScreen />
     case 'inbox':
       return <ListScreen listId={INBOX_ID} />
     case 'list':
