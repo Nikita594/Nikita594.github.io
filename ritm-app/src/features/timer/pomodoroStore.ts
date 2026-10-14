@@ -60,6 +60,8 @@ export const pomodoro = {
   stop: () => mutate((st, s) => stopState(st, Date.now(), s)),
   skipBreak: () => mutate((st, s) => ({ state: skipState(st, s) })),
   tick: () => mutate((st, s) => tick(st, Date.now(), s)),
+  /** Идёт — пауза; стоит или на паузе — запуск. */
+  toggle: () => mutate((st) => ({ state: st.status === 'running' ? pauseState(st, Date.now()) : startState(st, Date.now()) })),
   setTarget: (taskId: string | undefined, categoryId: string | undefined) => mutate((st) => ({ state: { ...st, taskId, categoryId } })),
   /** Сбросить на начало фокуса (например, после смены длительности в настройках). */
   reset: () => mutate((st, s) => ({ state: { ...initialState(s), taskId: st.taskId, categoryId: st.categoryId } })),

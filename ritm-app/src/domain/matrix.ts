@@ -27,7 +27,11 @@ export function quadrantOf(t: Pick<Task, 'priority' | 'dueDate'>, today: DateStr
  * важность — приоритет (в важные — высокий, если был ниже среднего; в неважные — низкий);
  * срочность — срок (в срочные — сегодня; в несрочные — послезавтра, ближайший несрочный день).
  */
-export function moveToQuadrant(t: Pick<Task, 'priority' | 'dueDate'>, q: Quadrant, today: DateStr): Partial<Pick<Task, 'priority' | 'dueDate'>> {
+export function moveToQuadrant(
+  t: Pick<Task, 'priority' | 'dueDate'>,
+  q: Quadrant,
+  today: DateStr,
+): Partial<Pick<Task, 'priority' | 'dueDate'>> {
   const target = QUADRANTS[q - 1]
   const changes: Partial<Pick<Task, 'priority' | 'dueDate'>> = {}
   if (target.important !== isImportant(t)) changes.priority = (target.important ? 3 : 1) as Priority

@@ -417,4 +417,56 @@ export const scenarios = {
     assert(!b.errors.length, 'ошибки в консоли: ' + b.errors.join('; '))
     await b.close()
   },
+
+  async 'Горячие клавиши (в т. ч. на русской раскладке) и тёмная тема'(ctx) {
+    const b = await ctx.browser('keys')
+    const page = await b.newPage()
+    await page.goto(ctx.url + '#/inbox')
+    await page.getByRole('heading', { name: 'Входящие' }).waitFor()
+
+    // N — новая задача
+    await page.keyboard.press('n')
+    const dialog = page.getByRole('dialog', { name: 'Новая задача' })
+    await dialog.getByLabel('Новая задача').fill('задача с клавиатуры !1')
+    await dialog.getByLabel('Новая задача').press('Enter')
+    await dialog.waitFor({ state: 'detached' })
+    await page.locator('[data-task-id]').filter({ hasText: 'задача с клавиатуры' }).waitFor()
+
+    // та же клавиша на русской раскладке: key «т», code KeyN
+    await page.evaluate(() => window.dispatchEvent(new KeyboardEvent('keydown', { key: 'т', code: 'KeyN', bubbles: true })))
+    await dialog.waitFor()
+    await page.keyboard.press('Escape')
+    await dialog.waitFor({ state: 'detached' })
+
+    // / — поиск; в поле поиска буквы печатаются, а не переключают разделы
+    await page.keyboard.press('/')
+    await page.getByRole('heading', { name: 'Поиск' }).waitFor()
+    await page.keyboard.type('w')
+    assert((await page.getByLabel('Поиск задач').inputValue()) === 'w', 'буква попала в поле поиска')
+    await page.getByLabel('Поиск задач').blur()
+    await page.keyboard.press('w')
+    await page.getByRole('heading', { name: 'Неделя' }).waitFor()
+    await page.keyboard.press('t')
+    await page.getByRole('heading', { name: 'Сегодня' }).waitFor()
+
+    // ? — справка
+    await page.keyboard.press('Shift+Slash')
+    await page.getByRole('dialog', { name: 'Горячие клавиши' }).waitFor()
+    await page.keyboard.press('Escape')
+
+    // тёмная тема переживает перезагрузку без мигания (класс ставится до загрузки приложения)
+    await page.goto(ctx.url + '#/settings')
+    await page.getByRole('radio', { name: 'Тёмная' }).click()
+    await page.waitForFunction(() => document.documentElement.classList.contains('dark'))
+    await page.reload({ waitUntil: 'domcontentloaded' })
+    assert(await page.evaluate(() => document.documentElement.classList.contains('dark')), 'тёмная тема сразу после перезагрузки')
+    await page.goto(ctx.url + '#/inbox')
+    await page.locator('[data-task-id]').first().waitFor()
+    await page.screenshot({ path: ctx.out + '/dark-inbox.png' })
+    await page.goto(ctx.url + '#/week')
+    await page.getByRole('heading', { name: 'Неделя' }).waitFor()
+    await page.screenshot({ path: ctx.out + '/dark-week.png' })
+    assert(!b.errors.length, 'ошибки в консоли: ' + b.errors.join('; '))
+    await b.close()
+  },
 }

@@ -1,5 +1,7 @@
 import { useEffect, useState, type ReactNode } from 'react'
-import { useSettings } from '../db/settings'
+import { useLiveQuery } from 'dexie-react-hooks'
+import { db } from '../db/db'
+import type { ThemeSetting } from '../db/settings'
 import { href, useRoute, type Route } from '../lib/router'
 import { registerServiceWorker, requestPersistentStorage } from '../lib/sw'
 import { useApplyTheme } from '../lib/theme'
@@ -8,6 +10,7 @@ import { cx, Empty } from '../ui/kit'
 import { Screen } from '../ui/Screen'
 import { toast, Toasts } from '../ui/toast'
 import { BOTTOM_NAV, TASK_VIEWS, TOOLS } from './nav'
+import { Shortcuts } from './Shortcuts'
 import { Sidebar } from './Sidebar'
 import { INBOX_ID } from '../db/seed'
 import { ListEditor } from '../features/lists/ListEditor'
@@ -64,10 +67,11 @@ function renderScreen(route: Route): ReactNode {
 
 export function App() {
   const route = useRoute()
-  const settings = useSettings()
+  // null, пока не прочитали из базы (иначе на миг применилась бы тема по умолчанию)
+  const theme = useLiveQuery(async () => ((await db.settings.get('theme'))?.value as ThemeSetting | undefined) ?? 'system', [], null)
   const [menuOpen, setMenuOpen] = useState(false)
   const timerLabel = useTimerLabel()
-  useApplyTheme(settings.theme)
+  useApplyTheme(theme)
 
   useEffect(() => {
     registerServiceWorker(() => toast('Приложение обновилось', { label: 'Перезагрузить', run: () => location.reload() }, 15000))
@@ -126,6 +130,7 @@ export function App() {
 
       <TaskEditorHost />
       <PomodoroRunner />
+      <Shortcuts />
       {addingList && <ListEditor onClose={() => setAddingList(false)} />}
       <Toasts />
     </div>

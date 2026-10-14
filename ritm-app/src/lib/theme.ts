@@ -1,9 +1,13 @@
 import { useEffect } from 'react'
 import type { ThemeSetting } from '../db/settings'
 
-/** Применяет тему к <html> и следит за системной темой, если выбрано «как в системе». */
-export function useApplyTheme(theme: ThemeSetting) {
+/**
+ * Применяет тему к <html> и следит за системной темой, если выбрано «как в системе».
+ * null — настройка ещё не прочитана из базы: ничего не трогаем, тему уже поставил скрипт в index.html.
+ */
+export function useApplyTheme(theme: ThemeSetting | null) {
   useEffect(() => {
+    if (theme === null) return
     try {
       localStorage.setItem('ritm-theme', theme)
     } catch {

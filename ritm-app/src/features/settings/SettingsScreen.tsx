@@ -1,5 +1,7 @@
 import type { ReactNode } from 'react'
-import { setSetting, useSettings, type SettingKey } from '../../db/settings'
+import { setSetting, useSettings, type SettingKey, type ThemeSetting } from '../../db/settings'
+import { ShortcutsTable } from '../../app/Shortcuts'
+import { cx } from '../../ui/kit'
 import { Screen } from '../../ui/Screen'
 import { pomodoro, usePomodoroState } from '../timer/pomodoroStore'
 import { CategoriesSettings } from './CategoriesSettings'
@@ -25,6 +27,31 @@ export function SettingsScreen() {
   }
   return (
     <Screen title="Настройки">
+      <SettingsSection title="Оформление">
+        <div className="flex gap-1 rounded-xl bg-surface-2 p-1" role="radiogroup" aria-label="Тема">
+          {(
+            [
+              ['system', 'Как в системе'],
+              ['light', 'Светлая'],
+              ['dark', 'Тёмная'],
+            ] as [ThemeSetting, string][]
+          ).map(([value, label]) => (
+            <button
+              key={value}
+              type="button"
+              role="radio"
+              aria-checked={settings.theme === value}
+              onClick={() => void setSetting('theme', value)}
+              className={cx(
+                'h-9 flex-1 rounded-lg text-sm',
+                settings.theme === value ? 'bg-surface font-medium shadow-sm' : 'text-muted hover:text-text',
+              )}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+      </SettingsSection>
       <SettingsSection title="Таймер" hint="Новые длительности применятся к следующему запуску.">
         <NumberSetting
           label="Фокус"
@@ -76,6 +103,9 @@ export function SettingsScreen() {
           value={settings.calendarEndHour}
           onChange={(v) => void setSetting('calendarEndHour', v)}
         />
+      </SettingsSection>
+      <SettingsSection title="Горячие клавиши" hint="Для компьютера. Нажмите «?» в любом месте, чтобы увидеть их снова.">
+        <ShortcutsTable />
       </SettingsSection>
       <SettingsSection title="Категории времени" hint="По ним считается, на что уходит время.">
         <CategoriesSettings />

@@ -37,7 +37,11 @@ describe('перетаскивание между квадрантами', () =>
     expect(moveToQuadrant({ priority: 3, dueDate: today }, 1, today)).toEqual({})
   })
   it('после переноса задача действительно в нужном квадранте', () => {
-    for (const from of [{ priority: 0 as const }, { priority: 3 as const, dueDate: today }, { priority: 1 as const, dueDate: '2026-12-01' }])
+    for (const from of [
+      { priority: 0 as const },
+      { priority: 3 as const, dueDate: today },
+      { priority: 1 as const, dueDate: '2026-12-01' },
+    ])
       for (const q of [1, 2, 3, 4] as const) expect(quadrantOf({ ...from, ...moveToQuadrant(from, q, today) }, today)).toBe(q)
   })
 })
