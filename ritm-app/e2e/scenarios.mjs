@@ -621,4 +621,73 @@ export const scenarios = {
     assert(!b.errors.length, 'ошибки в консоли: ' + b.errors.join('; '))
     await b.close()
   },
+
+  async 'Готово: Chrome считает приложение устанавливаемым (встроенная проверка браузера)'(ctx) {
+    const b = await ctx.browser('install')
+    const page = await b.newPage()
+    await page.goto(ctx.url)
+    await page.getByRole('heading', { name: 'Сегодня' }).waitFor()
+    await page.evaluate(() => navigator.serviceWorker.ready)
+    await page.reload() // после установки service worker страница под его управлением
+    await page.getByRole('heading', { name: 'Сегодня' }).waitFor()
+    const cdp = await b.newCDPSession(page)
+    const { installabilityErrors } = await cdp.send('Page.getInstallabilityErrors')
+    assert(installabilityErrors.length === 0, 'Chrome: ' + JSON.stringify(installabilityErrors))
+    const { url, errors } = await cdp.send('Page.getAppManifest')
+    assert(url && !errors.length, 'манифест без ошибок: ' + JSON.stringify(errors))
+    assert(await page.evaluate(() => !!navigator.serviceWorker.controller), 'страницей управляет service worker')
+    await b.close()
+  },
+
+  async 'Готово: все экраны на ширине 375 px без горизонтальной прокрутки'(ctx) {
+    const b = await ctx.browser('w375', { viewport: { width: 375, height: 740 }, launch: { hasTouch: true, isMobile: true } })
+    const page = await b.newPage()
+    await page.goto(ctx.url + '#/inbox')
+    // немного данных, чтобы экраны были не пустыми
+    const input = page.getByLabel('Новая задача')
+    for (const t of ['очень длинное название задачи, которое не должно растягивать страницу шире экрана телефона завтра 1ч #учёба', 'слова каждый день']) {
+      await input.fill(t)
+      await input.press('Enter')
+    }
+    await page.locator('[data-task-id]').nth(1).waitFor()
+    const routes = ['today', 'next7', 'inbox', 'done', 'search?q=слова', 'week', 'timer', 'habits', 'matrix', 'settings']
+    for (const r of routes) {
+      await page.goto(ctx.url + '#/' + r)
+      await page.locator('h1').first().waitFor()
+      await page.waitForTimeout(150)
+      const overflow = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth)
+      assert(overflow <= 0, `${r}: шире экрана на ${overflow}px`)
+      await page.screenshot({ path: `${ctx.out}/375-${r.split('?')[0]}.png` })
+    }
+    // задача открывается на весь экран и закрывается
+    await page.goto(ctx.url + '#/inbox')
+    await page.locator('[data-task-id]').first().click()
+    const editor = page.getByRole('dialog', { name: 'Задача' })
+    await editor.waitFor()
+    const box = await editor.boundingBox()
+    assert(box.width <= 375, 'редактор помещается в ширину')
+    await page.screenshot({ path: `${ctx.out}/375-editor.png` })
+    assert(!b.errors.length, 'ошибки в консоли: ' + b.errors.join('; '))
+    await b.close()
+  },
+
+  async 'Готово: данные переживают полный перезапуск браузера (PWA и файл)'(ctx) {
+    for (const [name, url] of [
+      ['restart-pwa', ctx.url + '#/inbox'],
+      ['restart-file', ctx.singleUrl + '#/inbox'],
+    ]) {
+      let b = await ctx.browser(name)
+      let page = await b.newPage()
+      await page.goto(url)
+      await page.getByLabel('Новая задача').fill('переживу перезапуск')
+      await page.getByLabel('Новая задача').press('Enter')
+      await page.locator('[data-task-id]').filter({ hasText: 'переживу перезапуск' }).waitFor()
+      await b.close()
+      b = await ctx.browser(name) // тот же профиль — как повторный запуск браузера
+      page = await b.newPage()
+      await page.goto(url)
+      await page.locator('[data-task-id]').filter({ hasText: 'переживу перезапуск' }).waitFor()
+      await b.close()
+    }
+  },
 }
