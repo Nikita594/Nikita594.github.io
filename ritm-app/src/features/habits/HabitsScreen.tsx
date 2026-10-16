@@ -6,7 +6,7 @@ import type { DateStr, Habit, HabitCheck } from '../../db/types'
 import { addDays, formatDayLabel, fromDateStr, WEEKDAY_SHORT, weekdayOf } from '../../domain/dates'
 import { bestStreak, currentStreak, isScheduled } from '../../domain/habits'
 import { days as daysText } from '../../domain/text'
-import { useIsWide } from '../../lib/useMediaQuery'
+import { useMediaQuery } from '../../lib/useMediaQuery'
 import { useToday } from '../../lib/useToday'
 import { Icon } from '../../ui/icons'
 import { Button, cx, Empty } from '../../ui/kit'
@@ -53,7 +53,8 @@ export function CheckCell({ habit, date, checked, size = 32 }: { habit: Habit; d
 
 export function HabitsScreen() {
   const today = useToday()
-  const wide = useIsWide()
+  // 14 дней — только когда рядом с меню есть место и для названий (от 1024 px)
+  const wide = useMediaQuery('(min-width: 1024px)')
   const habits = useLiveQuery(() => db.habits.orderBy('order').toArray(), [])
   const checks = useHabitChecks()
   const [editing, setEditing] = useState<Habit | 'new' | null>(null)

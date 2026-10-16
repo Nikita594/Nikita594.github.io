@@ -15,6 +15,7 @@ export function unlockSound() {
 export function chime() {
   if (!ctx) return
   try {
+    if (ctx.state === 'suspended') void ctx.resume()
     const now = ctx.currentTime
     for (const [i, freq] of [660, 880].entries()) {
       const osc = ctx.createOscillator()

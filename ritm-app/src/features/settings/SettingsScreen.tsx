@@ -24,7 +24,7 @@ export function SettingsScreen() {
   /** Длительности таймера: если он сейчас не идёт — сразу применяем новые. */
   const setTimer = async (key: SettingKey, v: number) => {
     await setSetting(key, v as never)
-    if (timer?.status === 'idle') await pomodoro.reset()
+    if (timer?.status === 'idle') await pomodoro.applyDurations()
   }
   return (
     <Screen title="Настройки">

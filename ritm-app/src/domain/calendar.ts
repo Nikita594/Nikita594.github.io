@@ -64,7 +64,15 @@ export function moveSpan(startMin: Minutes, endMin: Minutes, delta: number, dayS
 
 /** Новый конец при растягивании: не короче 15 минут и не дальше конца дня. */
 export function resizeEnd(startMin: Minutes, rawEnd: number, dayEnd: Minutes) {
-  return clamp(snap(rawEnd), startMin + SNAP, dayEnd)
+  // блок может начинаться после конца видимых часов — тогда граница сдвигается вслед за ним
+  return Math.max(startMin + SNAP, Math.min(snap(rawEnd), Math.max(dayEnd, startMin + SNAP)))
+}
+
+/** Видимые часы сетки: из настроек, но расширенные так, чтобы попали все блоки. */
+export function visibleHours(startHour: number, endHour: number, spans: Pick<Span, 'startMin' | 'endMin'>[]) {
+  const first = Math.min(startHour * 60, ...spans.map((s) => s.startMin))
+  const last = Math.max(endHour * 60, ...spans.map((s) => s.endMin))
+  return { startHour: Math.max(0, Math.floor(first / 60)), endHour: Math.min(24, Math.ceil(last / 60)) }
 }
 
 /** Отрезок, выделенный протягиванием от a до b (в любую сторону). */

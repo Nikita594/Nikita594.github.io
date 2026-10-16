@@ -86,7 +86,8 @@ export function App() {
   }
 
   return (
-    <div className="flex h-full">
+    // в альбомной ориентации iPhone не залезаем под вырез экрана
+    <div className="flex h-full pr-[env(safe-area-inset-right)] pl-[env(safe-area-inset-left)]">
       <aside className="hidden w-60 shrink-0 border-r border-line bg-surface md:block">
         <Sidebar onAddList={addList} />
       </aside>

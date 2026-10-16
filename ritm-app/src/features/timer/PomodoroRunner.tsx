@@ -2,12 +2,24 @@ import { useEffect } from 'react'
 import { endsAt, formatClock, remaining } from '../../domain/pomodoro'
 import { toast } from '../../ui/toast'
 import { pomodoro, usePomodoroState } from './pomodoroStore'
-import { chime, notify } from './sound'
+import { chime, notify, unlockSound } from './sound'
 
 /** Работает в фоне на любом экране: замечает конец фазы и показывает остаток в заголовке вкладки. */
 export function PomodoroRunner() {
   const st = usePomodoroState()
   const end = st ? endsAt(st) : undefined
+
+  // Звук можно включить только после действия пользователя. После перезагрузки кнопку «Старт» уже не нажимают,
+  // поэтому «разблокируем» звук при первом любом нажатии.
+  useEffect(() => {
+    const unlock = () => unlockSound()
+    document.addEventListener('pointerdown', unlock, { once: true, capture: true })
+    document.addEventListener('keydown', unlock, { once: true, capture: true })
+    return () => {
+      document.removeEventListener('pointerdown', unlock, { capture: true })
+      document.removeEventListener('keydown', unlock, { capture: true })
+    }
+  }, [])
 
   useEffect(() => {
     if (end === undefined) return

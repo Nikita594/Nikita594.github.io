@@ -4,6 +4,7 @@ import { DEFAULT_SETTINGS, getSetting, setSetting, type Settings } from '../../d
 import type { TimeEntry } from '../../db/types'
 import { uid } from '../../lib/id'
 import {
+  applyDurations,
   initialState,
   pause as pauseState,
   skipBreak as skipState,
@@ -63,8 +64,8 @@ export const pomodoro = {
   /** Идёт — пауза; стоит или на паузе — запуск. */
   toggle: () => mutate((st) => ({ state: st.status === 'running' ? pauseState(st, Date.now()) : startState(st, Date.now()) })),
   setTarget: (taskId: string | undefined, categoryId: string | undefined) => mutate((st) => ({ state: { ...st, taskId, categoryId } })),
-  /** Сбросить на начало фокуса (например, после смены длительности в настройках). */
-  reset: () => mutate((st, s) => ({ state: { ...initialState(s), taskId: st.taskId, categoryId: st.categoryId } })),
+  /** Применить новые длительности из настроек, если таймер сейчас стоит. */
+  applyDurations: () => mutate((st, s) => ({ state: applyDurations(st, s) })),
 }
 
 export function usePomodoroState(): PomodoroState | undefined {

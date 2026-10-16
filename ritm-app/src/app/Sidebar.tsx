@@ -53,7 +53,7 @@ export function Sidebar({ onNavigate, onAddList }: { onNavigate?: () => void; on
   const isActive = (r: string) => route.name === r
   const timer = useTimerLabel()
   return (
-    <nav className="flex h-full flex-col gap-1 overflow-y-auto p-3" aria-label="Разделы">
+    <nav className="flex h-full flex-col gap-1 overflow-y-auto p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]" aria-label="Разделы">
       <div className="mb-2 flex items-center gap-2 px-3 pt-1">
         <Logo />
         <span className="text-lg font-semibold tracking-tight">Ритм</span>

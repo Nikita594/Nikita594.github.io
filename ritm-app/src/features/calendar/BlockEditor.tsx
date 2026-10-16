@@ -4,7 +4,7 @@ import { db } from '../../db/db'
 import { useCategories } from '../../db/hooks'
 import type { TimeBlock } from '../../db/types'
 import { formatDuration, formatMinutes, parseHHMM } from '../../domain/dates'
-import { Button, Field, inputCls, Modal } from '../../ui/kit'
+import { Button, DraftInput, Field, inputCls, isFullDate, Modal } from '../../ui/kit'
 import { toast } from '../../ui/toast'
 import { openTask } from '../tasks/editorStore'
 
@@ -88,24 +88,26 @@ export function BlockEditor({ blockId, onClose }: { blockId: string; onClose: ()
         </Field>
         <div className="grid grid-cols-3 gap-2">
           <Field label="День">
-            <input type="date" className={inputCls} value={block.date} onChange={(e) => e.target.value && set({ date: e.target.value })} />
+            <DraftInput type="date" className={inputCls} value={block.date} isComplete={isFullDate} onCommit={(v) => set({ date: v })} />
           </Field>
           <Field label="Начало">
-            <input
+            <DraftInput
               type="time"
               step={900}
               className={inputCls}
               value={formatMinutes(block.startMin)}
-              onChange={(e) => setTime('startMin', e.target.value)}
+              isComplete={(v) => parseHHMM(v) !== undefined}
+              onCommit={(v) => setTime('startMin', v)}
             />
           </Field>
           <Field label="Конец">
-            <input
+            <DraftInput
               type="time"
               step={900}
               className={inputCls}
               value={formatMinutes(block.endMin % (24 * 60))}
-              onChange={(e) => setTime('endMin', e.target.value === '00:00' ? '24:00' : e.target.value)}
+              isComplete={(v) => parseHHMM(v) !== undefined}
+              onCommit={(v) => setTime('endMin', v === '00:00' ? '24:00' : v)}
             />
           </Field>
         </div>

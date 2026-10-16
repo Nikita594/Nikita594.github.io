@@ -3,8 +3,9 @@ import { useEffect, useState } from 'react'
 import { db } from '../../db/db'
 import { addEntry, deleteEntry } from '../../db/entries'
 import { useById, useCategories } from '../../db/hooks'
+import { useSettings } from '../../db/settings'
 import type { TimeEntry } from '../../db/types'
-import { addDays, formatDuration, formatMinutes, fromDateStr, parseHHMM, todayStr } from '../../domain/dates'
+import { addDays, formatDuration, formatMinutes, fromDateStr, parseHHMM, toDateStr, todayStr } from '../../domain/dates'
 import { elapsed, formatClock, remaining, type Phase } from '../../domain/pomodoro'
 import { useToday } from '../../lib/useToday'
 import { Button, cx, Empty, Field, IconButton, inputCls, Modal } from '../../ui/kit'
@@ -51,6 +52,7 @@ function Ring({ progress, children, focus }: { progress: number; children: React
 
 export function TimerScreen() {
   const st = usePomodoroState()
+  const settings = useSettings()
   const today = useToday()
   const categories = useCategories()
   const catById = useById(useCategories(true))
@@ -74,7 +76,10 @@ export function TimerScreen() {
   const left = remaining(st, now)
   const progress = st.durationMs ? elapsed(st, now) / st.durationMs : 0
   // во время длинного перерыва показываем все четыре круга закрашенными
-  const filledRounds = st.phase === 'long' ? 4 : st.round % 4
+  const longEvery = Math.max(1, settings.pomodoroLongEvery)
+  const filledRounds = st.phase === 'long' ? longEvery : st.round % longEvery
+  // выбранная задача уже выполнена или удалена — показываем её отдельно, чтобы было видно, куда пишется время
+  const targetMissing = !!st.taskId && !tasks.some((t) => t.id === st.taskId)
   const focusToday = entries.reduce((sum, e) => sum + (e.end - e.start), 0)
 
   const notifyAvailable = typeof Notification !== 'undefined' && Notification.permission === 'default'
@@ -95,7 +100,7 @@ export function TimerScreen() {
             {formatClock(left)}
           </div>
           <div className="mt-2 flex gap-1.5" aria-label={`Фокусов подряд: ${st.round}`}>
-            {Array.from({ length: 4 }, (_, i) => (
+            {Array.from({ length: longEvery }, (_, i) => (
               <span key={i} className={cx('h-2 w-2 rounded-full', i < filledRounds ? 'bg-accent' : 'bg-line')} />
             ))}
           </div>
@@ -150,6 +155,7 @@ export function TimerScreen() {
               }}
             >
               <option value="">без задачи</option>
+              {targetMissing && <option value={st.taskId}>{`${allTasks.get(st.taskId!)?.title ?? 'задача удалена'} (выполнена)`}</option>}
               {tasks.map((t) => (
                 <option key={t.id} value={t.id}>
                   {t.title}
@@ -237,10 +243,13 @@ export function ManualEntry({ onClose, defaults }: { onClose: () => void; defaul
   const categories = useCategories()
   const tasks = useLiveQuery(() => db.tasks.where('status').equals('open').sortBy('title'), []) ?? []
   const now = new Date()
-  const nowMin = Math.floor((now.getHours() * 60 + now.getMinutes()) / 5) * 5
-  const [date, setDate] = useState(defaults?.date ?? todayStr())
-  const [start, setStart] = useState(formatMinutes(Math.max(0, nowMin - 60)))
-  const [end, setEnd] = useState(formatMinutes(nowMin))
+  // по умолчанию — последний час; после полуночи он начался вчера, поэтому день берём от начала
+  const endAt = new Date(Math.floor(now.getTime() / 300_000) * 300_000)
+  const startAt = new Date(endAt.getTime() - 60 * 60_000)
+  const clock = (d: Date) => formatMinutes(d.getHours() * 60 + d.getMinutes())
+  const [date, setDate] = useState(defaults?.date ?? toDateStr(startAt))
+  const [start, setStart] = useState(clock(startAt))
+  const [end, setEnd] = useState(clock(endAt))
   const [categoryId, setCategoryId] = useState(defaults?.categoryId ?? '')
   const [taskId, setTaskId] = useState('')
   const s = parseHHMM(start)

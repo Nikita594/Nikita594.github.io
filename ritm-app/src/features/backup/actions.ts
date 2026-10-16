@@ -42,13 +42,20 @@ export function pickTextFile(accept = 'application/json,.json'): Promise<string 
     const input = document.createElement('input')
     input.type = 'file'
     input.accept = accept
+    // Safari на iPhone ненадёжно присылает change для поля вне страницы — кладём его в документ
+    input.style.display = 'none'
+    const done = (v: string | null) => {
+      input.remove()
+      resolve(v)
+    }
     input.onchange = () => {
       const f = input.files?.[0]
-      if (!f) return resolve(null)
-      f.text().then(resolve, () => resolve(null))
+      if (!f) return done(null)
+      f.text().then(done, () => done(null))
     }
     // окно закрыли без выбора — в современных браузерах приходит cancel
-    input.addEventListener('cancel', () => resolve(null))
+    input.addEventListener('cancel', () => done(null))
+    document.body.append(input)
     input.click()
   })
 }

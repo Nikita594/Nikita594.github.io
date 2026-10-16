@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { dragRange, layoutOverlaps, moveSpan, resizeEnd, snap, totalMinutes } from './calendar'
+import { dragRange, layoutOverlaps, moveSpan, resizeEnd, snap, totalMinutes, visibleHours } from './calendar'
 
 describe('сетка 15 минут', () => {
   it('округление', () => {
@@ -62,4 +62,16 @@ it('сумма минут', () => {
       { startMin: 700, endMin: 730 },
     ]),
   ).toBe(90)
+})
+
+describe('исправления после ревью', () => {
+  it('растягивание блока, который начинается после конца видимых часов, не даёт отрицательную длину', () => {
+    expect(resizeEnd(1350, 1300, 1320)).toBe(1365)
+    expect(resizeEnd(1350, 1420, 1320)).toBe(1365) // не короче 15 минут; дальше видимых часов не тянем (сетка и так расширяется под блок)
+  })
+  it('видимые часы расширяются под ранние и поздние блоки', () => {
+    expect(visibleHours(6, 24, [])).toEqual({ startHour: 6, endHour: 24 })
+    expect(visibleHours(8, 22, [{ startMin: 5 * 60 + 30, endMin: 6 * 60 + 30 }])).toEqual({ startHour: 5, endHour: 22 })
+    expect(visibleHours(8, 22, [{ startMin: 22 * 60 + 30, endMin: 23 * 60 + 15 }])).toEqual({ startHour: 8, endHour: 24 })
+  })
 })

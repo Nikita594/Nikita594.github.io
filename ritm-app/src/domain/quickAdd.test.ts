@@ -231,3 +231,84 @@ describe('обычные названия не превращаются в да�
     },
   )
 })
+
+describe('исправления после ревью (сейчас пятница 16 октября, 12:00)', () => {
+  const fri = new Date(2026, 9, 16, 12, 0)
+  const q = (s: string, now = fri) => parseQuickAdd(s, { ...ctx, now })
+
+  it('«в 10 часов», «до 18 часов», «к 9 часам» — это время, а не «через N часов»', () => {
+    expect(q('встреча в 10 часов')).toMatchObject({ title: 'встреча', dueDate: '2026-10-17', dueTime: 600 }) // 10:00 уже прошло
+    expect(q('сдать до 18 часов')).toMatchObject({ title: 'сдать', dueDate: '2026-10-16', dueTime: 1080 })
+    expect(q('встреча в 18 часов')).toMatchObject({ dueDate: '2026-10-16', dueTime: 1080 })
+    expect(q('пост в 3 часа', new Date(2026, 9, 16, 10, 0))).toMatchObject({ title: 'пост', dueDate: '2026-10-16', dueTime: 15 * 60 })
+    expect(q('встреча в 10 часов').durationMin).toBeUndefined()
+  })
+
+  it('длительность после слов на «к», «в»: «урок 45 мин», «урок 2 часа», «выучить 20 слов 30 мин»', () => {
+    expect(q('урок 45 мин')).toMatchObject({ title: 'урок', durationMin: 45 })
+    expect(q('урок 2 часа')).toMatchObject({ title: 'урок', durationMin: 120 })
+    expect(q('урок 1ч')).toMatchObject({ title: 'урок', durationMin: 60 })
+    expect(q('урок 45м')).toMatchObject({ title: 'урок', durationMin: 45 })
+    expect(q('урок 1.5ч')).toMatchObject({ title: 'урок', durationMin: 90 })
+    expect(q('урок на 2 часа')).toMatchObject({ title: 'урок', durationMin: 120 })
+    expect(q('кружок 2 часа')).toMatchObject({ title: 'кружок', durationMin: 120 })
+    expect(q('японский язык 30 мин')).toMatchObject({ title: 'японский язык', durationMin: 30 })
+    expect(q('выучить 20 слов 30 мин')).toMatchObject({ title: 'выучить 20 слов', durationMin: 30 })
+    for (const s of ['урок 45 мин', 'урок 2 часа', 'выучить 20 слов 30 мин']) expect(q(s).dueDate).toBeUndefined()
+  })
+
+  it('номера и проценты — не даты; «в 10.10» — время', () => {
+    expect(q('параграф 2.3')).toEqual({ title: 'параграф 2.3', unknown: [] })
+    expect(q('упражнение 4.5')).toEqual({ title: 'упражнение 4.5', unknown: [] })
+    expect(q('купить молоко 2.5%')).toEqual({ title: 'купить молоко 2.5%', unknown: [] })
+    expect(q('созвон в 10.10', new Date(2026, 9, 16, 9, 0))).toMatchObject({ title: 'созвон', dueDate: '2026-10-16', dueTime: 610 })
+    expect(q('контрольная 20.10')).toMatchObject({ title: 'контрольная', dueDate: '2026-10-20' })
+  })
+
+  it('отклонённая дата не портит название: «29.02» в невисокосный год', () => {
+    const r = q('олимпиада 29.02')
+    expect(r.title).toBe('олимпиада 29.02')
+  })
+
+  it('«каждый месяц 15-го», «5 числа», «каждое 20-е число»', () => {
+    expect(q('оплатить телефон каждый месяц 15-го')).toMatchObject({
+      title: 'оплатить телефон',
+      repeat: { kind: 'monthly', day: 15 },
+      dueDate: '2026-11-15',
+    })
+    expect(q('оплатить каждый месяц 5 числа')).toMatchObject({
+      title: 'оплатить',
+      repeat: { kind: 'monthly', day: 5 },
+      dueDate: '2026-11-05',
+    })
+    expect(q('отчёт каждое 20-е число')).toMatchObject({ title: 'отчёт', repeat: { kind: 'monthly', day: 20 }, dueDate: '2026-10-20' })
+  })
+
+  it('«каждый месяц 1.10» — ближайший повтор, а не через год', () => {
+    expect(q('оплатить каждый месяц 1.10')).toMatchObject({ repeat: { kind: 'monthly', day: 1 }, dueDate: '2026-11-01' })
+  })
+
+  it('«среда» как слово остаётся в названии', () => {
+    expect(q('доклад про окружающую среду')).toEqual({ title: 'доклад про окружающую среду', unknown: [] })
+    expect(q('биология среда обитания').title).toBe('биология среда обитания')
+    expect(q('охрана окружающей среды').title).toBe('охрана окружающей среды')
+    expect(q('эссе в среду')).toMatchObject({ title: 'эссе', dueDate: '2026-10-21' })
+    expect(q('эссе до среды')).toMatchObject({ title: 'эссе', dueDate: '2026-10-21' })
+  })
+
+  it('«через полчаса» — время, а не длительность', () => {
+    const r = q('позвонить через полчаса')
+    expect(r).toMatchObject({ title: 'позвонить', dueDate: '2026-10-16', dueTime: 12 * 60 + 30 })
+    expect(r.durationMin).toBeUndefined()
+    expect(q('чтение полчаса')).toMatchObject({ title: 'чтение', durationMin: 30 })
+  })
+
+  it('«каждые 2 недели» — повтор раз в 14 дней', () => {
+    expect(q('зал каждые 2 недели')).toMatchObject({ title: 'зал', repeat: { kind: 'interval', every: 14 }, dueDate: '2026-10-16' })
+    expect(q('зал каждые 2 недели в пятницу')).toMatchObject({
+      title: 'зал',
+      repeat: { kind: 'interval', every: 14 },
+      dueDate: '2026-10-23',
+    })
+  })
+})

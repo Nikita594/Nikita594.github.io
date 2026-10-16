@@ -1,7 +1,7 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, type PointerEvent as ReactPointerEvent } from 'react'
 import { createBlock, placeTask, updateBlock } from '../../db/blocks'
 import type { Category, DateStr, Minutes, Task, TimeBlock } from '../../db/types'
-import { dragRange, layoutOverlaps, moveSpan, resizeEnd, totalMinutes } from '../../domain/calendar'
+import { dragRange, layoutOverlaps, moveSpan, resizeEnd, totalMinutes, visibleHours } from '../../domain/calendar'
 import { formatDuration, formatMinutes, fromDateStr, minutesNow, WEEKDAY_SHORT, weekdayOf } from '../../domain/dates'
 import { useNow } from '../../lib/useToday'
 import { cx } from '../../ui/kit'
@@ -40,7 +40,24 @@ export interface WeekGridProps {
   onOpenBlock: (block: TimeBlock) => void
 }
 
-export function WeekGrid({ days, today, blocks, tasks, categories, startHour, endHour, placing, onPlaced, onOpenBlock }: WeekGridProps) {
+export function WeekGrid({
+  days,
+  today,
+  blocks,
+  tasks,
+  categories,
+  startHour: setStart,
+  endHour: setEnd,
+  placing,
+  onPlaced,
+  onOpenBlock,
+}: WeekGridProps) {
+  // блоки раньше или позже часов из настроек не прячем: сетка расширяется, чтобы их было видно
+  const { startHour, endHour } = visibleHours(
+    setStart,
+    setEnd,
+    blocks.filter((b) => days.includes(b.date)),
+  )
   const dayStart = startHour * 60
   const dayEnd = endHour * 60
   const scrollRef = useRef<HTMLDivElement>(null)
@@ -71,6 +88,15 @@ export function WeekGrid({ days, today, blocks, tasks, categories, startHour, en
       if (x >= r.left && x < r.right) return { date: days[i], min: dayStart + (y - r.top) / PPM }
     }
     return null
+  }
+
+  /** Как hit, но только в видимой части сетки (под шапкой дней): чтобы нельзя было «бросить» задачу в невидимое время. */
+  const hitVisible = (x: number, y: number) => {
+    const el = scrollRef.current
+    if (!el) return null
+    const header = el.firstElementChild?.getBoundingClientRect().bottom ?? el.getBoundingClientRect().top
+    if (y < header || y > el.getBoundingClientRect().bottom) return null
+    return hit(x, y)
   }
 
   const autoScroll = (y: number) => {
@@ -112,7 +138,7 @@ export function WeekGrid({ days, today, blocks, tasks, categories, startHour, en
         const range = click ? clickRange(d.anchor) : dragRange(d.anchor, d.cur, dayStart, dayEnd)
         void createBlock({ date: d.date, ...range }).then(onOpenBlock)
       } else if (d.kind === 'resize') {
-        void updateBlock(d.block.id, { endMin: d.endMin })
+        if (d.endMin > d.block.startMin) void updateBlock(d.block.id, { endMin: d.endMin })
       } else if (d.kind === 'move') {
         if (!d.moved) onOpenBlock(d.block)
         else
@@ -145,7 +171,7 @@ export function WeekGrid({ days, today, blocks, tasks, categories, startHour, en
     const onUp = (e: PointerEvent) => {
       const d = getTaskDrag()
       setTaskDrag(null)
-      const h = hit(e.clientX, e.clientY)
+      const h = hitVisible(e.clientX, e.clientY)
       if (d && h) void placeTask(d.task, h.date, slotStart(h.min), dayEnd)
     }
     const onCancel = () => setTaskDrag(null)
@@ -174,7 +200,8 @@ export function WeekGrid({ days, today, blocks, tasks, categories, startHour, en
     const h = hit(e.clientX, e.clientY)
     if (!h) return
     if (placing) {
-      void placeTask(placing, date, slotStart(h.min), dayEnd).then(onPlaced)
+      // пальцем — только по нажатию (click): иначе первое касание при прокрутке поставило бы задачу
+      if (e.pointerType !== 'touch') void placeTask(placing, date, slotStart(h.min), dayEnd).then(onPlaced)
       return
     }
     // на сенсорном экране тянуть по пустому месту — это прокрутка; блок создаём по нажатию (click)
@@ -185,9 +212,11 @@ export function WeekGrid({ days, today, blocks, tasks, categories, startHour, en
 
   const onColumnClick = (date: DateStr) => (e: React.MouseEvent) => {
     // только для касаний: мышь обрабатывается через pointerdown/up
-    if (lastPointer.current !== 'touch' || e.target !== e.currentTarget || placing) return
+    if (lastPointer.current !== 'touch' || e.target !== e.currentTarget) return
     const h = hit(e.clientX, e.clientY)
-    if (h) void createBlock({ date, ...clickRange(h.min) }).then(onOpenBlock)
+    if (!h) return
+    if (placing) void placeTask(placing, date, slotStart(h.min), dayEnd).then(onPlaced)
+    else void createBlock({ date, ...clickRange(h.min) }).then(onOpenBlock)
   }
 
   const onBlockDown = (block: TimeBlock) => (e: ReactPointerEvent) => {
@@ -251,7 +280,7 @@ export function WeekGrid({ days, today, blocks, tasks, categories, startHour, en
     return list
   }, [blocks, drag])
 
-  const taskHit = taskDrag ? hit(taskDrag.x, taskDrag.y) : null
+  const taskHit = taskDrag ? hitVisible(taskDrag.x, taskDrag.y) : null
   const hours = Array.from({ length: endHour - startHour }, (_, i) => startHour + i)
   const height = (dayEnd - dayStart) * PPM
   const nowMin = minutesNow(now)

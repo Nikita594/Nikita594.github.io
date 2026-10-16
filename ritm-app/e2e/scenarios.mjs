@@ -525,7 +525,7 @@ export const scenarios = {
     await page.getByRole('button', { name: 'Добавить время' }).click()
     await page.getByRole('dialog', { name: 'Добавить время' }).getByLabel('Категория').selectOption({ label: 'Игры' })
     await page.getByRole('dialog', { name: 'Добавить время' }).getByRole('button', { name: 'Добавить' }).click()
-    await page.locator('[data-entry-id]').first().waitFor()
+    await page.getByText(/^Добавлено/).waitFor() // запись может относиться ко вчера (после полуночи) — список «Сегодня» не проверяем
     await page.goto(ctx.url + '#/week')
     await page.evaluate(() => (document.querySelector('[data-week-grid]').scrollTop = (9 * 60 - 360) * 0.8))
     const col = await page.locator('[data-date]').nth(2).boundingBox()
@@ -645,7 +645,10 @@ export const scenarios = {
     await page.goto(ctx.url + '#/inbox')
     // немного данных, чтобы экраны были не пустыми
     const input = page.getByLabel('Новая задача')
-    for (const t of ['очень длинное название задачи, которое не должно растягивать страницу шире экрана телефона завтра 1ч #учёба', 'слова каждый день']) {
+    for (const t of [
+      'очень длинное название задачи, которое не должно растягивать страницу шире экрана телефона завтра 1ч #учёба',
+      'слова каждый день',
+    ]) {
       await input.fill(t)
       await input.press('Enter')
     }
@@ -689,5 +692,72 @@ export const scenarios = {
       await page.locator('[data-task-id]').filter({ hasText: 'переживу перезапуск' }).waitFor()
       await b.close()
     }
+  },
+
+  async 'Ревью: поля времени и даты набираются цифрами, Backspace не стирает срок и повтор'(ctx) {
+    const b = await ctx.browser('fields')
+    const page = await b.newPage()
+    // блок: набираем начало «14» по цифрам, как человек
+    await page.goto(ctx.url + '#/week')
+    await page.getByRole('heading', { name: 'Неделя' }).waitFor()
+    await page.evaluate(() => (document.querySelector('[data-week-grid]').scrollTop = (9 * 60 - 360) * 0.8))
+    const col = await page.locator('[data-date]').nth(1).boundingBox()
+    await page.mouse.click(col.x + col.width / 2, col.y + (10 * 60 + 5 - 360) * 0.8)
+    const dialog = page.getByRole('dialog', { name: 'Блок времени' })
+    await dialog.waitFor()
+    const start = dialog.getByLabel('Начало')
+    await start.click({ position: { x: 12, y: 10 } }) // сегмент часов
+    await page.keyboard.type('14', { delay: 80 })
+    await dialog.getByLabel('Конец').click({ position: { x: 12, y: 10 } })
+    await page.keyboard.type('17', { delay: 80 })
+    await dialog.getByRole('button', { name: 'Готово' }).click()
+    await page.getByRole('button', { name: /14:00–17:00/ }).waitFor()
+
+    // задача с повтором: Backspace в поле даты не должен ничего стереть
+    await page.goto(ctx.url + '#/inbox')
+    await page.getByLabel('Новая задача').fill('зарядка каждый день в 7 утра')
+    await page.getByLabel('Новая задача').press('Enter')
+    await page.locator('[data-task-id]').filter({ hasText: 'зарядка' }).click()
+    const editor = page.getByRole('dialog', { name: 'Задача' })
+    await editor.getByLabel('Дата').click({ position: { x: 12, y: 12 } })
+    await page.keyboard.press('Backspace')
+    await editor.getByLabel('Заметка').click()
+    await page.keyboard.press('Escape')
+    const task = await page.evaluate(
+      () =>
+        new Promise((res) => {
+          const r = indexedDB.open('ritm')
+          r.onsuccess = () => {
+            const q = r.result.transaction('tasks').objectStore('tasks').getAll()
+            q.onsuccess = () => res(q.result.find((t) => t.title === 'зарядка'))
+          }
+        }),
+    )
+    assert(task.dueDate && task.dueTime === 420 && task.repeat?.kind === 'daily', 'срок, время и повтор на месте: ' + JSON.stringify(task))
+    assert(!b.errors.length, 'ошибки в консоли: ' + b.errors.join('; '))
+    await b.close()
+  },
+
+  async 'Ревью: если браузер не даёт хранить данные — понятное сообщение, а не белый экран'(ctx) {
+    const b = await ctx.browser('no-idb')
+    const page = await b.newPage()
+    await page.addInitScript(() => Object.defineProperty(window, 'indexedDB', { value: undefined }))
+    await page.goto(ctx.singleUrl)
+    await page.getByRole('heading', { name: 'Браузер не даёт сохранять данные' }).waitFor()
+    await b.close()
+  },
+
+  async 'Ревью: «Добавить время» сразу после полуночи предлагает последний час'(ctx) {
+    const b = await ctx.browser('midnight')
+    const page = await b.newPage()
+    await page.clock.install({ time: new Date('2026-10-17T00:02:00+03:00') })
+    await page.goto(ctx.url + '#/timer')
+    await page.getByRole('button', { name: 'Добавить время' }).click()
+    const dialog = page.getByRole('dialog', { name: 'Добавить время' })
+    await dialog.getByText('Будет записано 1 ч').waitFor()
+    assert((await dialog.getByLabel('День').inputValue()) === '2026-10-16', 'час начался вчера')
+    await dialog.getByRole('button', { name: 'Добавить' }).click()
+    await page.getByText('Добавлено 1 ч').waitFor()
+    await b.close()
   },
 }

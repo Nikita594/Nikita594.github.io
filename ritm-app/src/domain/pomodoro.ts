@@ -12,6 +12,8 @@ export interface PomodoroState {
   runningSince?: Moment
   /** Сколько уже набежало до текущего отрезка (из-за пауз). */
   elapsedBefore: number
+  /** Когда поставили на паузу — чтобы «Стоп» после паузы записал фокус в его настоящее время. */
+  pausedAt?: Moment
   /** Длина фазы, мс. */
   durationMs: number
   /** Сколько фокусов подряд закончено (для длинного перерыва). */
@@ -56,12 +58,12 @@ export function remaining(st: PomodoroState, now: Moment): number {
 
 export function start(st: PomodoroState, now: Moment): PomodoroState {
   if (st.status === 'running') return st
-  return { ...st, status: 'running', runningSince: now }
+  return { ...st, status: 'running', runningSince: now, pausedAt: undefined }
 }
 
 export function pause(st: PomodoroState, now: Moment): PomodoroState {
   if (st.status !== 'running') return st
-  return { ...st, status: 'paused', elapsedBefore: elapsed(st, now), runningSince: undefined }
+  return { ...st, status: 'paused', elapsedBefore: elapsed(st, now), runningSince: undefined, pausedAt: now }
 }
 
 /** Момент, когда фаза закончится (если идёт). */
@@ -74,9 +76,26 @@ function nextPhase(st: PomodoroState, s: PomodoroSettings, focusDone: boolean): 
   if (st.phase === 'focus') {
     const round = focusDone ? st.round + 1 : st.round
     const phase: Phase = focusDone && round % Math.max(1, s.longEvery) === 0 ? 'long' : 'short'
-    return { ...st, phase, status: 'idle', elapsedBefore: 0, runningSince: undefined, durationMs: phaseMs(phase, s), round }
+    return {
+      ...st,
+      phase,
+      status: 'idle',
+      elapsedBefore: 0,
+      runningSince: undefined,
+      pausedAt: undefined,
+      durationMs: phaseMs(phase, s),
+      round,
+    }
   }
-  return { ...st, phase: 'focus', status: 'idle', elapsedBefore: 0, runningSince: undefined, durationMs: phaseMs('focus', s) }
+  return {
+    ...st,
+    phase: 'focus',
+    status: 'idle',
+    elapsedBefore: 0,
+    runningSince: undefined,
+    pausedAt: undefined,
+    durationMs: phaseMs('focus', s),
+  }
 }
 
 /** Запись фокуса, заканчивающаяся в end: длительность — фактически набежавшее время, без пауз. */
@@ -103,10 +122,18 @@ export function tick(
 export function stop(st: PomodoroState, now: Moment, s: PomodoroSettings): { state: PomodoroState; record?: FocusRecord } {
   const done = elapsed(st, now)
   if (st.phase !== 'focus') return { state: nextPhase(st, s, false) }
-  const rec = record(st, done, now)
+  // на паузе фокус закончился в момент паузы, а не сейчас (могли нажать «Стоп» на следующий день)
+  const end = st.status === 'paused' && st.pausedAt !== undefined ? st.pausedAt : now
+  const rec = record(st, done, end)
   // фокус не закончен — круг не засчитываем, просто возвращаемся к началу фокуса
   if (!rec) return { state: { ...initialState(s), round: st.round, taskId: st.taskId, categoryId: st.categoryId } }
   return { state: nextPhase(st, s, false), record: rec }
+}
+
+/** Новые длительности из настроек для стоящего таймера: фаза, круги и цель сохраняются. */
+export function applyDurations(st: PomodoroState, s: PomodoroSettings): PomodoroState {
+  if (st.status !== 'idle') return st
+  return { ...st, elapsedBefore: 0, runningSince: undefined, pausedAt: undefined, durationMs: phaseMs(st.phase, s) }
 }
 
 /** Пропустить перерыв. */

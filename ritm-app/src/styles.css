@@ -94,3 +94,15 @@
     display: none;
   }
 }
+
+/*
+  iPhone приближает страницу, если у поля ввода шрифт меньше 16 px, и не отдаляет обратно.
+  На сенсорных экранах делаем поля 16 px. Вне @layer — чтобы перебить утилиты вроде text-sm.
+*/
+@media (pointer: coarse) {
+  input,
+  select,
+  textarea:not(.text-lg) {
+    font-size: 16px;
+  }
+}

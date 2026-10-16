@@ -7,7 +7,7 @@ import type { Priority, Task } from '../../db/types'
 import { formatMinutes, parseHHMM } from '../../domain/dates'
 import { PRIORITY_LABELS } from '../../domain/tasks'
 import { Icon } from '../../ui/icons'
-import { cx, Drawer, IconButton, inputCls } from '../../ui/kit'
+import { cx, DraftInput, Drawer, IconButton, inputCls, isFullDate } from '../../ui/kit'
 import { closeTask, useOpenTaskId } from './editorStore'
 import { removeTask, TaskCheckbox, toggleTask } from './TaskRow'
 import { RepeatField } from './RepeatField'
@@ -88,6 +88,30 @@ function Row({ icon, label, children }: { icon: Parameters<typeof Icon>[0]['name
   )
 }
 
+/** Название подзадачи: сохраняется по Enter, при уходе с поля и при закрытии панели (Esc не вызывает blur). */
+function SubtaskTitle({ taskId, subId, title, done }: { taskId: string; subId: string; title: string; done: boolean }) {
+  const current = useRef(title)
+  const saved = useRef(title)
+  saved.current = title
+  const save = () => {
+    const v = current.current.trim()
+    if (v && v !== saved.current) void patchSubtask({ id: taskId }, subId, { title: v })
+  }
+  const saveRef = useRef(save)
+  saveRef.current = save
+  useEffect(() => () => saveRef.current(), [])
+  return (
+    <input
+      aria-label="Подзадача"
+      defaultValue={title}
+      onChange={(e) => (current.current = e.target.value)}
+      onBlur={save}
+      onKeyDown={(e) => e.key === 'Enter' && (e.target as HTMLInputElement).blur()}
+      className={cx('min-w-0 flex-1 bg-transparent text-sm outline-none', done && 'text-faint line-through')}
+    />
+  )
+}
+
 const selectCls = 'h-8 min-w-0 rounded-lg border border-line bg-surface px-2 text-sm outline-none focus:border-accent'
 
 function TaskEditor({ task }: { task: Task }) {
@@ -134,22 +158,24 @@ function TaskEditor({ task }: { task: Task }) {
 
         <div className="mt-3">
           <Row icon="calendar" label="Срок">
-            <input
+            {/* очистка поля клавишей не стирает срок, время и повтор — для этого есть кнопка «Убрать срок» */}
+            <DraftInput
               type="date"
               aria-label="Дата"
               className={cx(selectCls, 'w-[8.5rem]')}
               value={task.dueDate ?? ''}
-              onChange={(e) =>
-                set(e.target.value ? { dueDate: e.target.value } : { dueDate: undefined, dueTime: undefined, repeat: undefined })
-              }
+              isComplete={isFullDate}
+              onCommit={(v) => set({ dueDate: v })}
             />
             {task.dueDate && (
-              <input
+              <DraftInput
                 type="time"
                 aria-label="Время"
                 className={cx(selectCls, 'w-[6rem]')}
                 value={task.dueTime !== undefined ? formatMinutes(task.dueTime) : ''}
-                onChange={(e) => set({ dueTime: parseHHMM(e.target.value) })}
+                isComplete={(v) => parseHHMM(v) !== undefined && parseHHMM(v)! < 24 * 60}
+                commitEmptyOnBlur
+                onCommit={(v) => set({ dueTime: v ? parseHHMM(v) : undefined })}
               />
             )}
             {task.dueDate && (
@@ -250,13 +276,7 @@ function TaskEditor({ task }: { task: Task }) {
               >
                 {s.done && <Icon name="check" size={11} strokeWidth={3} />}
               </button>
-              <input
-                aria-label="Подзадача"
-                defaultValue={s.title}
-                onBlur={(e) => e.target.value.trim() !== s.title && void patchSubtask(task, s.id, { title: e.target.value.trim() })}
-                onKeyDown={(e) => e.key === 'Enter' && (e.target as HTMLInputElement).blur()}
-                className={cx('min-w-0 flex-1 bg-transparent text-sm outline-none', s.done && 'text-faint line-through')}
-              />
+              <SubtaskTitle taskId={task.id} subId={s.id} title={s.title} done={s.done} />
               <IconButton
                 icon="close"
                 label="Удалить подзадачу"

@@ -1,4 +1,4 @@
-import { useEffect, useRef, type ButtonHTMLAttributes, type ReactNode } from 'react'
+import { useEffect, useRef, useState, type ButtonHTMLAttributes, type InputHTMLAttributes, type ReactNode } from 'react'
 import { Icon, type IconName } from './icons'
 
 export function cx(...parts: (string | false | null | undefined)[]) {
@@ -188,3 +188,54 @@ export function ColorPicker({ value, onChange }: { value: string; onChange: (c: 
     </div>
   )
 }
+
+/**
+ * Поле с черновиком для даты, времени и чисел. Пока печатают, значение живёт в черновике:
+ * в базу уходит только полное и правильное значение (isComplete), а при уходе с поля неполное откатывается.
+ * Без этого поле, связанное напрямую с базой, сбрасывалось бы на каждой цифре (запись в IndexedDB асинхронная).
+ */
+export function DraftInput({
+  value,
+  onCommit,
+  isComplete = () => true,
+  commitEmptyOnBlur = false,
+  ...rest
+}: {
+  value: string
+  onCommit: (v: string) => void
+  isComplete?: (v: string) => boolean
+  /** Пустое поле при уходе с него — это «очистить» (например, убрать время). */
+  commitEmptyOnBlur?: boolean
+} & Omit<InputHTMLAttributes<HTMLInputElement>, 'value' | 'onChange' | 'defaultValue'>) {
+  const [draft, setDraft] = useState(value)
+  const focused = useRef(false)
+  useEffect(() => {
+    if (!focused.current) setDraft(value)
+  }, [value])
+  return (
+    <input
+      {...rest}
+      value={draft}
+      onFocus={(e) => {
+        focused.current = true
+        rest.onFocus?.(e)
+      }}
+      onChange={(e) => {
+        setDraft(e.target.value)
+        if (e.target.value !== '' && isComplete(e.target.value) && e.target.value !== value) onCommit(e.target.value)
+      }}
+      onBlur={(e) => {
+        focused.current = false
+        if (draft === '' && commitEmptyOnBlur && value !== '') onCommit('')
+        else if (draft === '' || !isComplete(draft)) setDraft(value)
+        rest.onBlur?.(e)
+      }}
+    />
+  )
+}
+
+/** Полная дата ГГГГ-ММ-ДД с правдоподобным годом (в Chrome год набирается по цифре: 0002 → 0020 → 0202 → 2027). */
+export const isFullDate = (v: string) => /^\d{4}-\d{2}-\d{2}$/.test(v) && Number(v.slice(0, 4)) >= 1970
+
+/** Число в диапазоне. */
+export const inRange = (lo: number, hi: number) => (v: string) => /^\d+$/.test(v) && Number(v) >= lo && Number(v) <= hi

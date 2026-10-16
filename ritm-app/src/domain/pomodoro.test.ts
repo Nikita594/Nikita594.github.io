@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { elapsed, formatClock, initialState, pause, remaining, skipBreak, start, stop, tick } from './pomodoro'
+import { applyDurations, elapsed, formatClock, initialState, pause, remaining, skipBreak, start, stop, tick } from './pomodoro'
 
 const S = { focusMin: 25, shortMin: 5, longMin: 15, longEvery: 4 }
 const MIN = 60_000
@@ -64,5 +64,30 @@ describe('помодоро', () => {
   it('пропустить перерыв', () => {
     const brk = tick(start(initialState(S), t0), t0 + 25 * MIN, S).state
     expect(skipBreak(brk, S)).toMatchObject({ phase: 'focus', status: 'idle', round: 1 })
+  })
+})
+
+describe('исправления после ревью', () => {
+  it('«Стоп» на паузе: фокус записан в момент паузы, а не нажатия «Стоп» на следующий день', () => {
+    const fri2100 = new Date(2026, 9, 16, 21, 0).getTime()
+    let st = start(initialState(S), fri2100)
+    st = pause(st, fri2100 + 20 * MIN)
+    const r = stop(st, fri2100 + 11 * 60 * MIN, S) // суббота, 08:00
+    expect(r.record).toMatchObject({ start: fri2100, end: fri2100 + 20 * MIN })
+  })
+  it('продолжение после паузы сбрасывает момент паузы', () => {
+    let st = pause(start(initialState(S), t0), t0 + MIN)
+    st = start(st, t0 + 5 * MIN)
+    expect(st.pausedAt).toBeUndefined()
+    expect(stop(st, t0 + 10 * MIN, S).record).toMatchObject({ end: t0 + 10 * MIN })
+  })
+  it('новые длительности не сбрасывают ждущий перерыв и счёт кругов', () => {
+    const brk = tick({ ...start(initialState(S), t0), round: 2 }, t0 + 25 * MIN, S).state
+    const after = applyDurations(brk, { ...S, shortMin: 10 })
+    expect(after).toMatchObject({ phase: 'short', round: 3, durationMs: 10 * MIN, status: 'idle' })
+  })
+  it('у идущего таймера длительность не меняется', () => {
+    const run = start(initialState(S), t0)
+    expect(applyDurations(run, { ...S, focusMin: 50 })).toBe(run)
   })
 })

@@ -1,5 +1,5 @@
 import type { Category, List, Priority, Task } from '../../db/types'
-import { completeTask, deleteTask, setTaskDone } from '../../db/tasks'
+import { completeTask, deleteTask, reopenTask } from '../../db/tasks'
 import { diffDays, formatDayLabel, formatDuration, formatMinutes, todayStr } from '../../domain/dates'
 import { INBOX_ID } from '../../db/seed'
 import { describeRepeat } from '../../domain/repeat'
@@ -45,7 +45,7 @@ export function TaskCheckbox({ task, onToggle }: { task: Task; onToggle?: (done:
 
 export async function toggleTask(task: Task) {
   if (task.status === 'done') {
-    await setTaskDone(task.id, false)
+    await reopenTask(task.id)
     return
   }
   const { nextDue, undo } = await completeTask(task.id)
@@ -91,7 +91,14 @@ export function TaskRow({
   // «Входящие» не подписываем — это список по умолчанию
   if (list?.id === INBOX_ID) showList = false
   const hasMeta =
-    (!hideDate && task.dueDate) || task.durationMin || task.subtasks.length || task.repeat || category || (showList && list) || task.note
+    (!hideDate && task.dueDate) ||
+    (hideDate && task.dueTime !== undefined) ||
+    task.durationMin ||
+    task.subtasks.length ||
+    task.repeat ||
+    category ||
+    (showList && list) ||
+    task.note
   return (
     <div
       role="button"
@@ -110,7 +117,16 @@ export function TaskRow({
         <div className={cx('text-sm leading-5 break-words', done && 'text-faint line-through')}>{task.title || 'Без названия'}</div>
         {hasMeta ? (
           <div className="mt-0.5 flex flex-wrap items-center gap-x-3 gap-y-0.5 text-xs text-muted">
-            {!hideDate && <DueLabel task={task} />}
+            {hideDate ? (
+              task.dueTime !== undefined && (
+                <span className="inline-flex items-center gap-1">
+                  <Icon name="clock" size={13} />
+                  {formatMinutes(task.dueTime)}
+                </span>
+              )
+            ) : (
+              <DueLabel task={task} />
+            )}
             {task.durationMin ? (
               <span className="inline-flex items-center gap-1">
                 <Icon name="clock" size={13} />

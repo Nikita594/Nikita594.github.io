@@ -3,7 +3,7 @@ import type { Repeat, Task, Weekday } from '../../db/types'
 import { todayStr, WEEKDAY_SHORT, weekdayOf } from '../../domain/dates'
 import { ALL_WEEKDAYS, firstOccurrence } from '../../domain/repeat'
 import { Icon } from '../../ui/icons'
-import { cx } from '../../ui/kit'
+import { cx, DraftInput, inRange, isFullDate } from '../../ui/kit'
 
 const ctl = 'h-8 rounded-lg border border-line bg-surface px-2 text-sm outline-none focus:border-accent'
 
@@ -80,14 +80,16 @@ export function RepeatField({ task }: { task: Task }) {
         {rule?.kind === 'interval' && (
           <label className="flex items-center gap-2 text-sm text-muted">
             каждые
-            <input
+            <DraftInput
               type="number"
+              inputMode="numeric"
               min={1}
               max={365}
               aria-label="Через сколько дней"
               className={cx(ctl, 'w-20')}
-              value={rule.every}
-              onChange={(e) => Number(e.target.value) >= 1 && patch({ every: Math.min(365, Math.round(Number(e.target.value))) })}
+              value={String(rule.every)}
+              isComplete={inRange(1, 365)}
+              onCommit={(v) => patch({ every: Number(v) })}
             />
             дн.
           </label>
@@ -96,17 +98,16 @@ export function RepeatField({ task }: { task: Task }) {
         {rule?.kind === 'monthly' && (
           <label className="flex items-center gap-2 text-sm text-muted">
             число месяца
-            <input
+            <DraftInput
               type="number"
+              inputMode="numeric"
               min={1}
               max={31}
               aria-label="Число месяца"
               className={cx(ctl, 'w-20')}
-              value={rule.day}
-              onChange={(e) => {
-                const d = Math.round(Number(e.target.value))
-                if (d >= 1 && d <= 31) patch({ day: d })
-              }}
+              value={String(rule.day)}
+              isComplete={inRange(1, 31)}
+              onCommit={(v) => patch({ day: Number(v) })}
             />
           </label>
         )}
@@ -114,12 +115,14 @@ export function RepeatField({ task }: { task: Task }) {
         {rule && (
           <label className="flex items-center gap-2 text-sm text-muted">
             до
-            <input
+            <DraftInput
               type="date"
               aria-label="Повторять до"
               className={cx(ctl, 'w-[8.5rem]')}
               value={rule.until ?? ''}
-              onChange={(e) => patch({ until: e.target.value || undefined })}
+              isComplete={isFullDate}
+              commitEmptyOnBlur
+              onCommit={(v) => patch({ until: v || undefined })}
             />
             {!rule.until && <span className="text-xs text-faint">без конца</span>}
           </label>
