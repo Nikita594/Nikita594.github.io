@@ -1,4 +1,4 @@
-import { useEffect, useState, type ReactNode } from 'react'
+import { lazy, Suspense, useEffect, useState, type ReactNode } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '../db/db'
 import type { ThemeSetting } from '../db/settings'
@@ -16,16 +16,9 @@ import { Sidebar } from './Sidebar'
 import { INBOX_ID } from '../db/seed'
 import { ListEditor } from '../features/lists/ListEditor'
 import { ListScreen } from '../features/lists/ListScreen'
-import { SearchScreen } from '../features/search/SearchScreen'
-import { SettingsScreen } from '../features/settings/SettingsScreen'
 import { TaskEditorHost } from '../features/tasks/TaskEditor'
-import { DoneScreen } from '../features/views/DoneScreen'
-import { WeekScreen } from '../features/calendar/WeekScreen'
 import { PomodoroRunner } from '../features/timer/PomodoroRunner'
 import { useTimerLabel } from '../features/timer/TimerBadge'
-import { TimerScreen } from '../features/timer/TimerScreen'
-import { HabitsScreen } from '../features/habits/HabitsScreen'
-import { MatrixScreen } from '../features/matrix/MatrixScreen'
 import { Next7Screen } from '../features/views/Next7Screen'
 import { TodayScreen } from '../features/views/TodayScreen'
 
@@ -36,6 +29,16 @@ function Placeholder({ title }: { title: string }) {
     </Screen>
   )
 }
+
+// Редкие экраны подгружаются при первом переходе — так быстрее первое открытие.
+// Без интернета это работает: service worker заранее кладёт все части в кэш, а в однофайловой версии они внутри файла.
+const WeekScreen = lazy(() => import('../features/calendar/WeekScreen').then((m) => ({ default: m.WeekScreen })))
+const TimerScreen = lazy(() => import('../features/timer/TimerScreen').then((m) => ({ default: m.TimerScreen })))
+const HabitsScreen = lazy(() => import('../features/habits/HabitsScreen').then((m) => ({ default: m.HabitsScreen })))
+const MatrixScreen = lazy(() => import('../features/matrix/MatrixScreen').then((m) => ({ default: m.MatrixScreen })))
+const SettingsScreen = lazy(() => import('../features/settings/SettingsScreen').then((m) => ({ default: m.SettingsScreen })))
+const SearchScreen = lazy(() => import('../features/search/SearchScreen').then((m) => ({ default: m.SearchScreen })))
+const DoneScreen = lazy(() => import('../features/views/DoneScreen').then((m) => ({ default: m.DoneScreen })))
 
 function renderScreen(route: Route): ReactNode {
   switch (route.name) {
@@ -92,7 +95,9 @@ export function App() {
         <Sidebar onAddList={addList} />
       </aside>
 
-      <main className="min-w-0 flex-1">{renderScreen(route)}</main>
+      <main className="min-w-0 flex-1">
+        <Suspense fallback={null}>{renderScreen(route)}</Suspense>
+      </main>
 
       {/* Нижняя панель на телефоне */}
       <nav

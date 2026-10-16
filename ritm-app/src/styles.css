@@ -24,8 +24,9 @@
   --c-surface: #ffffff;
   --c-surface-2: #efeee9;
   --c-text: #1d1c1a;
-  --c-muted: #6b6862;
-  --c-faint: #a19e97;
+  --c-muted: #5c5953;
+  /* бледный текст — всё равно не ниже 4.5:1 к фону (требование доступности) */
+  --c-faint: #74706a;
   --c-line: #e4e2dc;
   --c-accent: #0f766e;
   --c-accent-soft: #d5ece8;
@@ -42,8 +43,8 @@
   --c-surface: #1a1d1c;
   --c-surface-2: #242826;
   --c-text: #ecebe7;
-  --c-muted: #a3a29c;
-  --c-faint: #6c6d68;
+  --c-muted: #b4b3ad;
+  --c-faint: #8c8d87;
   --c-line: #2d3230;
   --c-accent: #2fb5a5;
   --c-accent-soft: #173a36;
