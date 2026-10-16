@@ -10,6 +10,7 @@ import { cx, Empty } from '../ui/kit'
 import { Screen } from '../ui/Screen'
 import { toast, Toasts } from '../ui/toast'
 import { BOTTOM_NAV, TASK_VIEWS, TOOLS } from './nav'
+import { BackupReminder } from '../features/backup/BackupReminder'
 import { Shortcuts } from './Shortcuts'
 import { Sidebar } from './Sidebar'
 import { INBOX_ID } from '../db/seed'
@@ -131,6 +132,7 @@ export function App() {
       <TaskEditorHost />
       <PomodoroRunner />
       <Shortcuts />
+      <BackupReminder />
       {addingList && <ListEditor onClose={() => setAddingList(false)} />}
       <Toasts />
     </div>

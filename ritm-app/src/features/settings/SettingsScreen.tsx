@@ -4,6 +4,7 @@ import { ShortcutsTable } from '../../app/Shortcuts'
 import { cx } from '../../ui/kit'
 import { Screen } from '../../ui/Screen'
 import { pomodoro, usePomodoroState } from '../timer/pomodoroStore'
+import { BackupSettings } from '../backup/BackupSettings'
 import { CategoriesSettings } from './CategoriesSettings'
 import { NumberSetting } from './NumberSetting'
 
@@ -27,6 +28,9 @@ export function SettingsScreen() {
   }
   return (
     <Screen title="Настройки">
+      <SettingsSection title="Резервная копия" hint="Все задачи, списки, привычки, календарь и записи времени — в одном файле.">
+        <BackupSettings />
+      </SettingsSection>
       <SettingsSection title="Оформление">
         <div className="flex gap-1 rounded-xl bg-surface-2 p-1" role="radiogroup" aria-label="Тема">
           {(

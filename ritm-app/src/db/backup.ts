@@ -20,14 +20,18 @@ const DEVICE_SETTINGS = new Set(['pomodoro', 'backupSnoozedUntil', 'lastBackupAt
 export const EXPORT_MIGRATIONS: Record<number, (tables: Record<string, unknown[]>) => Record<string, unknown[]>> = {}
 
 export async function exportData(now: Date = new Date()): Promise<Backup> {
-  return db.transaction('r', TABLES.map((t) => db.table(t)), async () => {
-    const tables = {} as Record<TableName, unknown[]>
-    for (const t of TABLES) {
-      const rows = await db.table(t).toArray()
-      tables[t] = t === 'settings' ? rows.filter((r: { key: string }) => !DEVICE_SETTINGS.has(r.key)) : rows
-    }
-    return { app: 'ritm', schemaVersion: SCHEMA_VERSION, exportedAt: now.toISOString(), tables }
-  })
+  return db.transaction(
+    'r',
+    TABLES.map((t) => db.table(t)),
+    async () => {
+      const tables = {} as Record<TableName, unknown[]>
+      for (const t of TABLES) {
+        const rows = await db.table(t).toArray()
+        tables[t] = t === 'settings' ? rows.filter((r: { key: string }) => !DEVICE_SETTINGS.has(r.key)) : rows
+      }
+      return { app: 'ritm', schemaVersion: SCHEMA_VERSION, exportedAt: now.toISOString(), tables }
+    },
+  )
 }
 
 export class BackupError extends Error {}
@@ -46,7 +50,8 @@ export function parseBackup(text: string): Backup {
   }
   const version = Number(b.schemaVersion)
   if (!Number.isInteger(version) || version < 1) throw new BackupError('В файле нет версии данных — похоже, он повреждён.')
-  if (version > SCHEMA_VERSION) throw new BackupError('Копия сделана в более новой версии приложения. Обновите приложение и попробуйте снова.')
+  if (version > SCHEMA_VERSION)
+    throw new BackupError('Копия сделана в более новой версии приложения. Обновите приложение и попробуйте снова.')
 
   let tables = b.tables as Record<string, unknown[]>
   for (let v = version; v < SCHEMA_VERSION; v++) tables = EXPORT_MIGRATIONS[v]?.(tables) ?? tables
@@ -68,18 +73,23 @@ export function parseBackup(text: string): Backup {
 
 /** Заменяет все данные на этом устройстве данными из копии. */
 export async function importData(backup: Backup) {
-  await db.transaction('rw', TABLES.map((t) => db.table(t)), async () => {
-    const keep = (await db.settings.toArray()).filter((r) => DEVICE_SETTINGS.has(r.key) && r.key !== 'pomodoro')
-    for (const t of TABLES) {
-      await db.table(t).clear()
-      const rows = t === 'settings' ? backup.tables.settings.filter((r) => !DEVICE_SETTINGS.has((r as { key: string }).key)) : backup.tables[t]
-      await db.table(t).bulkAdd(rows)
-    }
-    await db.settings.bulkPut(keep)
-    // данные теперь совпадают с копией — значит, копия есть
-    const at = Date.parse(backup.exportedAt)
-    if (!Number.isNaN(at)) await db.settings.put({ key: 'lastBackupAt', value: at })
-  })
+  await db.transaction(
+    'rw',
+    TABLES.map((t) => db.table(t)),
+    async () => {
+      const keep = (await db.settings.toArray()).filter((r) => DEVICE_SETTINGS.has(r.key) && r.key !== 'pomodoro')
+      for (const t of TABLES) {
+        await db.table(t).clear()
+        const rows =
+          t === 'settings' ? backup.tables.settings.filter((r) => !DEVICE_SETTINGS.has((r as { key: string }).key)) : backup.tables[t]
+        await db.table(t).bulkAdd(rows)
+      }
+      await db.settings.bulkPut(keep)
+      // данные теперь совпадают с копией — значит, копия есть
+      const at = Date.parse(backup.exportedAt)
+      if (!Number.isNaN(at)) await db.settings.put({ key: 'lastBackupAt', value: at })
+    },
+  )
 }
 
 /** Что лежит в копии — для окна подтверждения. */
@@ -104,7 +114,13 @@ export function backupFileName(now: Date = new Date()) {
 const WEEK = 7 * 24 * 60 * 60 * 1000
 
 /** Пора ли тихо напомнить о копии: прошла неделя с последней копии (или с первого запуска) и есть что сохранять. */
-export function shouldRemindBackup(s: { lastBackupAt: number; installedAt: number; backupSnoozedUntil: number; hasData: boolean; now: number }) {
+export function shouldRemindBackup(s: {
+  lastBackupAt: number
+  installedAt: number
+  backupSnoozedUntil: number
+  hasData: boolean
+  now: number
+}) {
   if (!s.hasData || s.now < s.backupSnoozedUntil) return false
   const since = Math.max(s.lastBackupAt, s.installedAt)
   return since > 0 && s.now - since >= WEEK

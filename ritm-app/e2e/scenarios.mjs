@@ -4,6 +4,30 @@ export function assert(cond, msg) {
   if (!cond) throw new Error(msg)
 }
 
+/** Все таблицы базы как есть (для сравнения устройств). Служебные настройки устройства не сравниваем. */
+async function dbDump(page) {
+  return page.evaluate(
+    () =>
+      new Promise((resolve, reject) => {
+        const r = indexedDB.open('ritm')
+        r.onsuccess = async () => {
+          const db = r.result
+          const out = {}
+          for (const name of [...db.objectStoreNames].sort()) {
+            out[name] = await new Promise((res) => {
+              const q = db.transaction(name).objectStore(name).getAll()
+              q.onsuccess = () => res(q.result)
+            })
+          }
+          const device = ['pomodoro', 'backupSnoozedUntil', 'lastBackupAt', 'installedAt']
+          out.settings = out.settings.filter((s) => !device.includes(s.key))
+          resolve(out)
+        }
+        r.onerror = () => reject(r.error)
+      }),
+  )
+}
+
 async function dbCount(page, table) {
   return page.evaluate(
     (table) =>
@@ -466,6 +490,134 @@ export const scenarios = {
     await page.goto(ctx.url + '#/week')
     await page.getByRole('heading', { name: 'Неделя' }).waitFor()
     await page.screenshot({ path: ctx.out + '/dark-week.png' })
+    assert(!b.errors.length, 'ошибки в консоли: ' + b.errors.join('; '))
+    await b.close()
+  },
+
+  async 'Резервная копия: сохранить, восстановить на чистом устройстве и в однофайловой версии — без потерь'(ctx) {
+    // устройство А: наполняем данными через интерфейс
+    const a = await ctx.browser('backup-a')
+    const page = await a.newPage()
+    await page.goto(ctx.url + '#/inbox')
+    await page.getByRole('button', { name: 'Новый список' }).click()
+    await page.getByPlaceholder('Например, Школа').fill('Школа')
+    await page.getByRole('button', { name: 'Создать' }).click()
+    await page.getByRole('heading', { name: 'Школа' }).waitFor()
+    const input = page.getByLabel('Новая задача')
+    for (const t of ['эссе «Почему я» завтра в 18:00 1ч30м !1 #учёба', 'слова каждый день #англ', 'монтаж серии в пятницу 2ч #канал']) {
+      await input.fill(t)
+      await input.press('Enter')
+    }
+    await page.locator('[data-task-id]').filter({ hasText: 'монтаж серии' }).waitFor()
+    await page.locator('[data-task-id]').filter({ hasText: 'эссе' }).click()
+    const editor = page.getByRole('dialog', { name: 'Задача' })
+    await editor.getByLabel('Новая подзадача').fill('черновик')
+    await editor.getByLabel('Новая подзадача').press('Enter')
+    await editor.getByLabel('Заметка').fill('строка 1\nстрока 2 «кавычки» 🙂')
+    await page.keyboard.press('Escape')
+    await page.locator('[data-task-id]').filter({ hasText: 'слова' }).getByRole('checkbox').click()
+    await page.goto(ctx.url + '#/habits')
+    await page.getByRole('button', { name: 'Добавить привычку' }).click()
+    await page.getByPlaceholder('Например, 20 новых слов').fill('Зарядка')
+    await page.getByRole('button', { name: 'Создать' }).click()
+    await page.getByRole('button', { name: 'Зарядка, Сегодня', exact: true }).click()
+    await page.goto(ctx.url + '#/timer')
+    await page.getByRole('button', { name: 'Добавить время' }).click()
+    await page.getByRole('dialog', { name: 'Добавить время' }).getByLabel('Категория').selectOption({ label: 'Игры' })
+    await page.getByRole('dialog', { name: 'Добавить время' }).getByRole('button', { name: 'Добавить' }).click()
+    await page.locator('[data-entry-id]').first().waitFor()
+    await page.goto(ctx.url + '#/week')
+    await page.evaluate(() => (document.querySelector('[data-week-grid]').scrollTop = (9 * 60 - 360) * 0.8))
+    const col = await page.locator('[data-date]').nth(2).boundingBox()
+    await page.mouse.click(col.x + col.width / 2, col.y + (10 * 60 + 5 - 360) * 0.8)
+    await page.getByRole('dialog', { name: 'Блок времени' }).getByRole('button', { name: 'Готово' }).click()
+    await page.goto(ctx.url + '#/settings')
+    await page.getByRole('radio', { name: 'Тёмная' }).click()
+    await page.waitForFunction(() => document.documentElement.classList.contains('dark'))
+
+    const before = await dbDump(page)
+    assert(
+      before.tasks.length === 4 && before.habits.length === 1 && before.blocks.length === 1 && before.entries.length === 1,
+      'данные созданы: ' + JSON.stringify(Object.fromEntries(Object.entries(before).map(([k, v]) => [k, v.length]))),
+    )
+
+    const [download] = await Promise.all([page.waitForEvent('download'), page.getByRole('button', { name: 'Сохранить копию' }).click()])
+    assert(/^ritm-backup-\d{4}-\d{2}-\d{2}\.json$/.test(download.suggestedFilename()), 'имя файла: ' + download.suggestedFilename())
+    const file = ctx.out + '/backup.json'
+    await download.saveAs(file)
+    await page.getByText(/Последняя копия: сегодня/).waitFor()
+    await a.close()
+
+    // устройство Б: чистое, восстанавливаем
+    for (const [name, url] of [
+      ['backup-b', ctx.url + '#/settings'],
+      ['backup-single', ctx.singleUrl + '#/settings'],
+    ]) {
+      const b = await ctx.browser(name)
+      const p = await b.newPage()
+      await p.goto(url)
+      await p.getByRole('heading', { name: 'Настройки' }).waitFor()
+      const [chooser] = await Promise.all([p.waitForEvent('filechooser'), p.getByRole('button', { name: 'Восстановить из файла' }).click()])
+      await chooser.setFiles(file)
+      const confirm = p.getByRole('dialog', { name: 'Восстановить из копии?' })
+      await confirm.getByText('3 задачи в работе').waitFor()
+      await confirm.getByText('1 привычка').waitFor()
+      await confirm.getByRole('button', { name: 'Восстановить' }).click()
+      await p.getByText('Данные восстановлены').waitFor()
+      await p.waitForFunction(() => document.documentElement.classList.contains('dark'))
+      const after = await dbDump(p)
+      for (const table of Object.keys(before)) {
+        assert(JSON.stringify(after[table]) === JSON.stringify(before[table]), `${name}: таблица ${table} отличается`)
+      }
+      // и видно в интерфейсе
+      await p.goto(url.replace('#/settings', '#/search?q=эссе'))
+      await p.locator('[data-task-id]').filter({ hasText: 'эссе' }).waitFor()
+      assert(!b.errors.length, name + ': ошибки в консоли: ' + b.errors.join('; '))
+      await b.close()
+    }
+  },
+
+  async 'Резервная копия: тихое напоминание через неделю и «Позже»'(ctx) {
+    const b = await ctx.browser('backup-remind')
+    const page = await b.newPage()
+    await page.goto(ctx.url + '#/today')
+    await page.getByLabel('Новая задача').fill('что-то важное')
+    await page.getByLabel('Новая задача').press('Enter')
+    await page.locator('[data-task-id]').first().waitFor()
+    assert(!(await page.getByText('Резервной копии не было больше недели.').isVisible()), 'в первую неделю не напоминаем')
+    // «установили» приложение 8 дней назад
+    await page.evaluate(
+      () =>
+        new Promise((res) => {
+          const r = indexedDB.open('ritm')
+          r.onsuccess = () => {
+            const tx = r.result.transaction('settings', 'readwrite')
+            tx.objectStore('settings').put({ key: 'installedAt', value: Date.now() - 8 * 86400000 })
+            tx.oncomplete = res
+          }
+        }),
+    )
+    await page.reload()
+    const bar = page.getByText('Резервной копии не было больше недели.')
+    await bar.waitFor()
+    await page.screenshot({ path: ctx.out + '/backup-reminder.png' })
+    await page.getByRole('button', { name: 'Позже' }).click()
+    await bar.waitFor({ state: 'detached' })
+    // дождаться, пока «Позже» запишется в базу
+    await page.waitForFunction(
+      () =>
+        new Promise((res) => {
+          const r = indexedDB.open('ritm')
+          r.onsuccess = () => {
+            const q = r.result.transaction('settings').objectStore('settings').get('backupSnoozedUntil')
+            q.onsuccess = () => res((q.result?.value ?? 0) > Date.now())
+          }
+        }),
+    )
+    await page.reload()
+    await page.locator('[data-task-id]').first().waitFor()
+    await page.waitForTimeout(300)
+    assert(!(await bar.isVisible()), '«Позже» скрывает напоминание на несколько дней')
     assert(!b.errors.length, 'ошибки в консоли: ' + b.errors.join('; '))
     await b.close()
   },

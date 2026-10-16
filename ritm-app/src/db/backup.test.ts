@@ -33,17 +33,49 @@ async function fill() {
   await completeTask(r.id, new Date(2026, 9, 13, 20))
   await placeTask(t, '2026-10-14', 16 * 60)
   await addEntry({ start: 1_791_900_000_000, end: 1_791_901_500_000, categoryId: cat.id, taskId: t.id, source: 'timer' })
-  await addEntry({ start: 1_791_800_000_000, end: 1_791_803_600_000, categoryId: 'games', source: 'manual', unplanned: true, before: 'устал после школы' })
+  await addEntry({
+    start: 1_791_800_000_000,
+    end: 1_791_803_600_000,
+    categoryId: 'games',
+    source: 'manual',
+    unplanned: true,
+    before: 'устал после школы',
+  })
   const h = await createHabit('Зарядка', '#0891b2', [1, 2, 3, 4, 5])
   await toggleCheck(h.id, '2026-10-12')
   await toggleCheck(h.id, '2026-10-13')
   await db.goals.bulkAdd([
     { id: 'g1', title: 'Поступить в университет в США', level: 'main', status: 'active', note: '', order: 0, createdAt: 1 },
-    { id: 'g2', title: 'Английский A1 → B1 к августу', level: 'season', parentId: 'g1', from: '2026-09-01', to: '2027-08-31', status: 'active', note: '', order: 1, createdAt: 2 },
+    {
+      id: 'g2',
+      title: 'Английский A1 → B1 к августу',
+      level: 'season',
+      parentId: 'g1',
+      from: '2026-09-01',
+      to: '2027-08-31',
+      status: 'active',
+      note: '',
+      order: 1,
+      createdAt: 2,
+    },
   ])
   await db.savings.add({ id: 'sv', title: 'Ноутбук для монтажа', target: 15_000_000, currency: 'RUB', createdAt: 3 })
-  await db.money.add({ id: 'm1', date: '2026-10-10', kind: 'income', amount: 500_000, currency: 'RUB', note: 'подработка', savingsId: 'sv', createdAt: 4 })
-  await db.reviews.add({ id: '2026-10-05', answers: { good: 'сделал эссе', hindered: 'игры', focus: 'SAT' }, snapshot: { hours: 12 }, createdAt: 5 })
+  await db.money.add({
+    id: 'm1',
+    date: '2026-10-10',
+    kind: 'income',
+    amount: 500_000,
+    currency: 'RUB',
+    note: 'подработка',
+    savingsId: 'sv',
+    createdAt: 4,
+  })
+  await db.reviews.add({
+    id: '2026-10-05',
+    answers: { good: 'сделал эссе', hindered: 'игры', focus: 'SAT' },
+    snapshot: { hours: 12 },
+    createdAt: 5,
+  })
   await setSetting('theme', 'dark')
   await setSetting('dailyLimitMin', 420)
   await setSetting('pomodoro', { phase: 'focus', status: 'running', runningSince: 1, elapsedBefore: 0, durationMs: 1, round: 0 })
@@ -95,7 +127,9 @@ describe('резервная копия', () => {
   })
 
   it('старая копия без новых таблиц читается', () => {
-    const b = parseBackup(JSON.stringify({ app: 'ritm', schemaVersion: 1, exportedAt: '2026-10-01T00:00:00Z', tables: { tasks: [], lists: [] } }))
+    const b = parseBackup(
+      JSON.stringify({ app: 'ritm', schemaVersion: 1, exportedAt: '2026-10-01T00:00:00Z', tables: { tasks: [], lists: [] } }),
+    )
     expect(b.tables.goals).toEqual([])
   })
 
@@ -119,8 +153,10 @@ describe('напоминание о копии', () => {
   const now = 100 * day
   const base = { lastBackupAt: 0, installedAt: now - 3 * day, backupSnoozedUntil: 0, hasData: true, now }
   it('неделю после установки — молчим', () => expect(shouldRemindBackup(base)).toBe(false))
-  it('через 7 дней после установки без копии — напоминаем', () => expect(shouldRemindBackup({ ...base, installedAt: now - 7 * day })).toBe(true))
-  it('копия была 2 дня назад — молчим', () => expect(shouldRemindBackup({ ...base, installedAt: now - 30 * day, lastBackupAt: now - 2 * day })).toBe(false))
+  it('через 7 дней после установки без копии — напоминаем', () =>
+    expect(shouldRemindBackup({ ...base, installedAt: now - 7 * day })).toBe(true))
+  it('копия была 2 дня назад — молчим', () =>
+    expect(shouldRemindBackup({ ...base, installedAt: now - 30 * day, lastBackupAt: now - 2 * day })).toBe(false))
   it('«Позже» — молчим до указанного времени', () =>
     expect(shouldRemindBackup({ ...base, installedAt: now - 30 * day, backupSnoozedUntil: now + day })).toBe(false))
   it('нечего сохранять — молчим', () => expect(shouldRemindBackup({ ...base, installedAt: now - 30 * day, hasData: false })).toBe(false))
