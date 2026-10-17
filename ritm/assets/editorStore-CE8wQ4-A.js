@@ -1,0 +1,1 @@
+import{W as e,q as t}from"./id-mF0cu-NQ.js";var n=t(e(),1),r=null,i=new Set;function a(e){r=e,i.forEach(e=>e())}function o(){r=null,i.forEach(e=>e())}function s(){return(0,n.useSyncExternalStore)(e=>(i.add(e),()=>i.delete(e)),()=>r)}export{a as n,s as r,o as t};
