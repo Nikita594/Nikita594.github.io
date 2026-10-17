@@ -527,6 +527,7 @@ export const scenarios = {
     await page.getByRole('dialog', { name: 'Добавить время' }).getByRole('button', { name: 'Добавить' }).click()
     await page.getByText(/^Добавлено/).waitFor() // запись может относиться ко вчера (после полуночи) — список «Сегодня» не проверяем
     await page.goto(ctx.url + '#/week')
+    await page.locator('[data-week-grid]').waitFor()
     await page.evaluate(() => (document.querySelector('[data-week-grid]').scrollTop = (9 * 60 - 360) * 0.8))
     const col = await page.locator('[data-date]').nth(2).boundingBox()
     await page.mouse.click(col.x + col.width / 2, col.y + (10 * 60 + 5 - 360) * 0.8)

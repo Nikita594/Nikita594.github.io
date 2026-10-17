@@ -17,8 +17,10 @@ const out = join(here, 'out')
 await rm(profiles, { recursive: true, force: true })
 await mkdir(out, { recursive: true })
 
-const { server, url } = await serve(join(root, 'dist'))
-const singleUrl = 'file://' + join(root, 'dist-single', 'index.html')
+// По умолчанию проверяем свежую сборку; E2E_RELEASE=1 — готовый выпуск в ../ritm (то, что раздаёт сайт)
+const release = process.env.E2E_RELEASE === '1'
+const { server, url } = await serve(release ? join(root, '..', 'ritm') : join(root, 'dist'))
+const singleUrl = 'file://' + (release ? join(root, '..', 'ritm', 'ritm-offline.html') : join(root, 'dist-single', 'index.html'))
 
 const ctx = {
   url,
