@@ -6,19 +6,24 @@
   --c-surface-2: #e9e2d4;
   --c-text: #1b1813;
   --c-muted: #4a443b;
-  --c-faint: #6e665b;
+  --c-faint: #655d52;
   --c-line: #cfc5b3;
   --c-accent: #2337ff;
-  --c-accent-soft: #e2e1f3;
+  --c-accent-soft: #f9edb9;
   --c-on-accent: #ffffff;
-  --c-p1: #2337ff;
-  --c-p2: #b45309;
-  --c-p3: #c2255c;
+  /* приоритеты — цвета чернил: высокий кобальт, средний охра, низкий зелёный */
+  --c-p1: #1f6b44;
+  --c-p2: #9c4a07;
+  --c-p3: #2337ff;
+  --c-danger: #b3261e;
   --grad-a: #2337ff;
   --grad-b: #2337ff;
   --grad-c: #2337ff;
   --grad: #1b1813;
   --marker: #ffe066;
+  --rule: 1px solid #1b1813;
+  --rule-bold: 2px solid #1b1813;
+  --grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.35 0 0 0 0 0.3 0 0 0 0 0.22 0 0 0 .09 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
   --d-font-text: 'Onest Variable', system-ui, sans-serif;
   --d-font-display: 'Playfair Display Variable', Georgia, serif;
   --d-font-num: 'JetBrains Mono Variable', ui-monospace, monospace;
@@ -32,154 +37,744 @@
   --display-weight: 700;
   --display-tracking: -0.02em;
   --display-style: normal;
-  --preview-bg: radial-gradient(ellipse at 20% 0%, #fff8e8 0%, transparent 60%), #f2ede3;
+  --logo-bg: transparent;
+  --logo-fg: #2337ff;
+  --preview-bg: var(--grain), radial-gradient(ellipse at 20% 0%, #fff8e8 0%, transparent 60%), #f2ede3;
   color-scheme: light;
 }
 
 /* Стили действуют внутри [data-design='paper'], но не внутри вложенного превью другого дизайна (настройки). */
 @scope ([data-design='paper']) to ([data-design]:not([data-design='paper'])) {
+  /* бумага: зерно и тёплый свет сверху слева */
   .ui-backdrop {
     background-color: var(--c-bg);
-    background-image:
-      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.35 0 0 0 0 0.3 0 0 0 0 0.22 0 0 0 .09 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"),
-      radial-gradient(ellipse at 20% 0%, #fff8e8 0%, transparent 60%);
+    background-image: var(--grain), radial-gradient(ellipse at 20% 0%, #fff8e8 0%, transparent 60%);
   }
 
+  /* ---------- меню: корешок ежедневника ---------- */
   .ui-sidebar {
-    background: transparent;
+    background: linear-gradient(270deg, rgb(27 24 19 / 0.045), transparent 28px);
     border-right: 1px solid var(--c-line);
   }
 
   .ui-brand {
+    align-items: flex-end;
+    margin-bottom: 14px;
+  }
+  .ui-brand > span {
+    font-size: 1.75rem;
+    line-height: 1;
     font-style: italic;
     font-weight: 900;
+    letter-spacing: -0.01em;
+  }
+  /* столбики логотипа — после слова, как в шапке планера */
+  .ui-brand .ui-logo {
+    order: 1;
+    margin-left: -4px;
   }
 
+  .ui-search {
+    border: 0;
+    border-bottom: 1px dashed var(--c-faint);
+    border-radius: 0;
+    color: var(--c-faint);
+  }
+  .ui-search:hover {
+    color: var(--c-text);
+    border-bottom-style: solid;
+  }
+
+  .ui-nav-item {
+    color: var(--c-muted);
+  }
+  .ui-nav-item:hover {
+    background: rgb(27 24 19 / 0.05);
+    color: var(--c-text);
+  }
   .ui-nav-item[aria-current='page'] {
     background: transparent;
     color: var(--c-text);
     font-weight: 700;
-    box-shadow: inset 0 -2px 0 var(--c-text);
-    border-radius: 0;
+  }
+  /* активный пункт: линия до края, как закладка-линейка */
+  .ui-nav-item[aria-current='page']::after {
+    content: '';
+    order: 1;
+    flex: 1 0 16px;
+    border-bottom: 1.5px solid var(--c-text);
+  }
+  .ui-nav-item > span.ml-auto {
+    order: 2;
+    font-family: var(--d-font-num);
+  }
+
+  /* разделы — с номерами вместо значков: 01 Сегодня, 02 Следующие 7 дней… */
+  :is(.ui-sidebar, .ui-sheet) > nav {
+    counter-reset: nav;
+  }
+  :is(.ui-sidebar, .ui-sheet) > nav > .ui-nav-item:has(> svg) {
+    counter-increment: nav;
+  }
+  :is(.ui-sidebar, .ui-sheet) > nav > .ui-nav-item:has(> svg) > svg {
+    display: none;
+  }
+  :is(.ui-sidebar, .ui-sheet) > nav > .ui-nav-item:has(> svg)::before {
+    content: counter(nav, decimal-leading-zero);
+    content: counter(nav, decimal-leading-zero) / '';
+    width: 18px;
+    flex-shrink: 0;
+    font-family: var(--d-font-num);
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--c-faint);
+  }
+  :is(.ui-sidebar, .ui-sheet) > nav > .ui-nav-item[aria-current='page']:has(> svg)::before {
+    color: var(--c-accent);
   }
 
   .ui-nav-label {
     font-family: var(--d-font-display);
     font-style: italic;
+    font-weight: 400;
     text-transform: none;
     letter-spacing: 0;
     font-size: 15px;
   }
 
-  .ui-header {
-    background: transparent;
-    border-bottom: 2px solid var(--c-text);
+  /* метки категорий и списков — квадратики, как наклейки */
+  .ui-dot,
+  .ui-color {
+    border-radius: 1.5px;
   }
 
-  .ui-title {
-    font-style: italic;
-    font-weight: 400;
-    font-size: 1.6rem;
-  }
-
-  .ui-section-title {
-    font-family: var(--d-font-display);
-    font-style: italic;
-    text-transform: none;
-    letter-spacing: 0;
-    font-size: 15px;
-    font-weight: 400;
-  }
-
-  .ui-task {
-    border-radius: 0;
-    border-bottom: 1px solid var(--c-line);
-  }
-
-  .ui-task:hover {
-    background: rgb(255 224 102 / 0.18);
-  }
-
-  .ui-check {
-    border: 1.6px solid var(--c-text);
-    width: 18px;
-    height: 18px;
-  }
-
-  .ui-check[data-priority='3'] {
-    border-color: var(--c-accent);
-    box-shadow:
-      inset 0 0 0 2px var(--c-bg),
-      inset 0 0 0 10px rgb(35 55 255 / 0.14);
-  }
-
-  .ui-check[aria-checked='true'] {
-    background: transparent;
-    border-color: var(--c-text);
-    color: var(--c-accent);
-  }
-
-  .ui-addtask {
-    border: none;
-    border-bottom: 1px dashed var(--c-faint);
-    border-radius: 0;
-    background: transparent;
-  }
-
-  .ui-addtask-plus {
-    color: var(--c-accent);
-  }
-
-  .ui-btn[data-variant='primary'] {
-    background: var(--c-text);
-    color: var(--c-bg);
-    border-radius: 999px;
-  }
-
-  .ui-card,
-  .ui-widget {
-    background: transparent;
-  }
-
+  /* ---------- нижняя панель и меню телефона ---------- */
   .ui-bottomnav {
-    background: var(--c-bg);
-    border-top: 2px solid var(--c-text);
+    background: var(--grain), var(--c-bg);
+    border-top: var(--rule-bold);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
   }
-
+  .ui-tab {
+    color: var(--c-muted);
+  }
   .ui-tab[aria-current='page'] {
     color: var(--c-text);
     font-weight: 700;
   }
+  .ui-tab[aria-current='page'] > span {
+    box-shadow: 0 2px 0 var(--c-accent);
+  }
 
-  .ui-modal,
-  .ui-drawer,
   .ui-sheet {
+    background: var(--grain), var(--c-surface);
+    border-right: var(--rule);
+  }
+  .ui-sheet.rounded-t-2xl {
+    border-right: 0;
+    border-top: var(--rule);
+    border-radius: var(--d-r-card) var(--d-r-card) 0 0;
+  }
+
+  /* ---------- заголовок экрана ---------- */
+  .ui-header {
+    background: transparent;
+    border-bottom: var(--rule-bold);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+  .ui-title {
+    font-style: italic;
+    font-weight: 400;
+    font-size: 1.65rem;
+    line-height: 1.2;
+    letter-spacing: -0.01em;
+  }
+  @media (min-width: 768px) {
+    .ui-title {
+      font-size: 1.9rem;
+    }
+  }
+  .ui-subtitle {
+    font-size: 12px;
+    letter-spacing: 0.02em;
+  }
+
+  /* заголовки разделов — курсивом, без капса */
+  .ui-section-title,
+  :is(h2, h3).uppercase {
+    font-family: var(--d-font-display);
+    font-style: italic;
+    font-weight: 400;
+    text-transform: none;
+    letter-spacing: 0;
+    font-size: 17px;
+    color: var(--c-text);
+  }
+  .ui-section-title > span {
+    font-family: var(--d-font-num);
+    font-style: normal;
+    font-size: 11px;
+  }
+
+  /* ---------- строки задач: линейки вместо карточек ---------- */
+  .ui-task {
+    border-radius: 0;
+    border-bottom: 1px solid var(--c-line);
+  }
+  .ui-task:hover {
+    background: rgb(255 224 102 / 0.2);
+  }
+  .ui-task[data-task-id] {
+    padding-top: 10px;
+    padding-bottom: 10px;
+  }
+  .ui-task[data-task-id] .ui-task-title {
+    font-size: 15px;
+    line-height: 1.35;
+  }
+  .ui-task[data-done='true'] .ui-task-title {
+    text-decoration-thickness: 1.5px;
+  }
+  .ui-task-meta {
+    margin-top: 3px;
+  }
+  .ui-chip {
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    font-size: 10.5px;
+    font-weight: 600;
+  }
+  .ui-task-time {
+    color: var(--c-muted);
+    font-size: 13px;
+    font-weight: 500;
+  }
+
+  /* квадратные чернильные галочки; приоритет — цветом чернил и заливкой */
+  .ui-check {
+    width: 18px;
+    height: 18px;
+    border: 1.6px solid var(--c-text);
+  }
+  .ui-check:hover {
+    background-color: rgb(255 224 102 / 0.55);
+  }
+  .ui-check[data-priority='1'] {
+    border-color: var(--c-p1);
+  }
+  .ui-check[data-priority='2'] {
+    border: 2px solid var(--c-p2);
+    box-shadow:
+      inset 0 0 0 2px var(--c-bg),
+      inset 0 0 0 10px rgb(255 224 102 / 0.75);
+  }
+  .ui-check[data-priority='3'] {
+    border: 2px solid var(--c-accent);
+    box-shadow:
+      inset 0 0 0 2px var(--c-bg),
+      inset 0 0 0 10px rgb(35 55 255 / 0.16);
+  }
+  .ui-check[aria-checked='true'] {
+    background: transparent;
+    border: 1.6px solid var(--c-text);
+    box-shadow: none;
+    color: var(--c-accent);
+  }
+
+  /* строка быстрого ввода — пунктир, при вводе — сплошная кобальтовая */
+  .ui-addtask {
+    background: transparent;
+    border: 0;
+    border-bottom: 1px dashed var(--c-faint);
+    border-radius: 0;
+    box-shadow: none;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+  .ui-addtask:focus-within {
+    border-bottom: 1px solid var(--c-accent);
+    box-shadow: 0 1px 0 var(--c-accent);
+  }
+  .ui-addtask > div:first-child {
+    padding-left: 3px;
+    padding-right: 4px;
+  }
+  .ui-addtask-plus {
+    color: var(--c-accent);
+  }
+
+  /* ---------- кнопки и поля ---------- */
+  .ui-btn {
+    border-radius: 999px;
+  }
+  .ui-btn[data-variant='primary'] {
+    background: var(--c-text);
+    color: var(--c-bg);
+    font-weight: 600;
+    letter-spacing: 0.01em;
+  }
+  .ui-btn[data-variant='soft'] {
+    background: transparent;
+    color: var(--c-text);
+    box-shadow: inset 0 0 0 1.5px var(--c-text);
+  }
+  .ui-btn[data-variant='soft']:hover {
+    background: rgb(255 224 102 / 0.5);
+    color: var(--c-text);
+  }
+  .ui-btn[data-variant='ghost'] {
+    color: var(--c-muted);
+  }
+  .ui-btn[data-variant='ghost']:hover {
+    background: rgb(27 24 19 / 0.06);
+    color: var(--c-text);
+  }
+  .ui-btn[data-variant='danger'] {
+    color: var(--c-danger);
+  }
+  .ui-btn[data-variant='danger']:hover {
+    background: rgb(179 38 30 / 0.08);
+  }
+  /* «удалить привычку» и подобные ссылки — красными чернилами, как правка редактора */
+  button.text-p3 {
+    color: var(--c-danger);
+  }
+
+  .ui-iconbtn {
+    border-radius: 999px;
+  }
+  .ui-iconbtn:hover {
+    background: rgb(27 24 19 / 0.06);
+  }
+  /* включённая кнопка-переключатель (панель задач в неделе) */
+  .ui-iconbtn.bg-surface-2 {
+    box-shadow: inset 0 0 0 1.5px var(--c-text);
+  }
+
+  /* поля — пунктирная линия для письма */
+  .ui-input {
+    background: transparent;
+    border: 0;
+    border-bottom: 1px dashed var(--c-faint);
+    border-radius: 0;
+    padding-left: 2px;
+    padding-right: 2px;
+  }
+  .ui-input:hover {
+    border-bottom-color: var(--c-text);
+  }
+  .ui-input[type='number'],
+  kbd {
+    font-family: var(--d-font-num);
+  }
+  .ui-input:focus,
+  .ui-input:focus-within {
+    border-bottom: 1px solid var(--c-accent);
+    box-shadow: 0 1px 0 var(--c-accent);
+  }
+
+  /* ---------- карточки: разделы под тонкой линейкой ---------- */
+  .ui-card,
+  .ui-widget {
+    background: transparent;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+  .ui-card:not(.ui-banner) {
+    border: 0;
+    border-top: var(--rule);
+    border-radius: 0;
+    padding-left: 0;
+    padding-right: 0;
+  }
+  .ui-card:not(.ui-banner, .ui-quadrant):first-child {
+    border-top: 0;
+  }
+  .ui-card > h2:first-child {
+    font-family: var(--d-font-display);
+    font-style: italic;
+    font-weight: 400;
+    font-size: 1.45rem;
+    line-height: 1.2;
+  }
+
+  /* напоминание о копии — листок поверх страницы */
+  .ui-banner {
+    background: var(--grain), var(--c-surface);
+    border: var(--rule);
+    border-radius: var(--d-r-card);
+    box-shadow: 0 16px 40px -16px rgb(27 24 19 / 0.45);
+  }
+
+  .ui-empty::before {
+    content: '';
+    display: block;
+    width: 36px;
+    height: 2px;
+    margin: 0 auto 18px;
+    background: var(--c-text);
+  }
+  .ui-empty > p:first-child {
+    font-family: var(--d-font-display);
+    font-style: italic;
+    font-weight: 400;
+    font-size: 1.4rem;
+    line-height: 1.25;
+  }
+
+  /* ---------- окна ---------- */
+  .ui-overlay {
+    background: rgb(27 24 19 / 0.38);
+  }
+  .ui-modal,
+  .ui-drawer {
+    background: var(--grain), var(--c-surface);
+  }
+  .ui-modal {
+    border: var(--rule);
+    box-shadow: 0 30px 60px -20px rgb(27 24 19 / 0.5);
+  }
+  @media (max-width: 639px) {
+    .ui-modal {
+      border-width: 1px 0 0;
+    }
+  }
+  .ui-modal > div:first-child > h2 {
+    font-family: var(--d-font-display);
+    font-style: italic;
+    font-weight: 400;
+    font-size: 1.45rem;
+    line-height: 1.2;
+  }
+  .ui-drawer {
+    border-left: var(--rule);
+    box-shadow: -24px 0 48px -24px rgb(27 24 19 / 0.4);
+  }
+  /* название задачи — антиквой, как заголовок заметки */
+  .ui-drawer textarea.text-lg {
+    font-family: var(--d-font-display);
+    font-size: 1.5rem;
+    font-weight: 600;
+    line-height: 1.25;
+  }
+  /* приоритет: выбранный — маркером и обводкой */
+  .ui-drawer [role='radiogroup'][aria-label='Приоритет'] {
+    flex-wrap: wrap;
+  }
+  .ui-drawer [role='radiogroup'][aria-label='Приоритет'] > button {
+    border-radius: 999px;
+  }
+  .ui-drawer [role='radiogroup'][aria-label='Приоритет'] > [aria-checked='true'] {
+    background: var(--marker);
+    box-shadow: inset 0 0 0 1.5px var(--c-text);
+    font-weight: 600;
+  }
+  /* галочки подзадач — как у задач */
+  .ui-drawer button[role='checkbox']:not(.ui-check) {
+    border: 1.5px solid var(--c-text);
+    border-radius: 2px;
+    background: transparent;
+  }
+  .ui-drawer button[role='checkbox'][aria-checked='true']:not(.ui-check) {
+    color: var(--c-accent);
+  }
+
+  /* дни недели (привычка, повтор): пустые — клетки, выбранные — кобальт */
+  [role='group'][aria-label='Дни недели'] > button {
+    border-radius: var(--d-r-ctl);
+  }
+  [role='group'][aria-label='Дни недели'] > .bg-surface-2 {
+    background: transparent;
+    box-shadow: inset 0 0 0 1px var(--c-faint);
+  }
+  [role='group'][aria-label='Дни недели'] > .bg-accent {
+    font-weight: 600;
+  }
+  /* итоги привычки — цифры антиквой под линейкой */
+  .ui-modal .rounded-xl.bg-surface-2 {
+    background: transparent;
+    border-top: var(--rule);
+    border-radius: 0;
+  }
+  .ui-modal .rounded-xl.bg-surface-2 > div:first-child {
+    font-family: var(--d-font-display);
+    font-size: 1.25rem;
+    font-weight: 700;
+    font-variant-numeric: lining-nums;
+  }
+  [role='radiogroup'][aria-label='Дизайн'] > [role='radio'] {
     background: var(--c-surface);
   }
 
-  .ui-hero {
-    background: transparent;
-    border: none;
-    border-bottom: 2px solid var(--c-text);
-    border-radius: 0;
+  .ui-toast {
+    background: var(--c-text);
+    color: var(--c-bg);
+    border-radius: var(--d-r-ctl);
+    box-shadow: 0 12px 30px -10px rgb(27 24 19 / 0.5);
+  }
+  .ui-toast button {
+    color: var(--marker);
   }
 
+  /* ---------- «Сегодня» ---------- */
+  .ui-hero {
+    background: transparent;
+    border: 0;
+    border-top: var(--rule);
+    border-bottom: var(--rule-bold);
+    border-radius: 0;
+    padding-left: 8px;
+    padding-right: 8px;
+  }
+  .ui-hero-date {
+    text-transform: uppercase;
+    letter-spacing: 0.16em;
+    font-size: 11.5px;
+  }
   .ui-hero-title {
     font-style: italic;
     font-weight: 400;
   }
-
+  @media (min-width: 768px) {
+    .ui-hero .ui-hero-title {
+      font-size: 3rem;
+    }
+  }
   .ui-hero-title b {
     color: var(--c-text);
     background: linear-gradient(transparent 58%, var(--marker) 58%, var(--marker) 92%, transparent 92%);
   }
-
+  .ui-load > span:first-child {
+    border-bottom: 1px solid var(--c-line);
+    padding: 0 2px;
+  }
+  .ui-load > span:last-child {
+    font-family: var(--d-font-num);
+    padding: 0 2px;
+  }
   .ui-load-bar {
     background: rgb(27 24 19 / 0.18);
     border-radius: 0;
   }
-
   .ui-load-bar[data-today='true'] {
     background: var(--c-accent);
+  }
+
+  /* виджеты справа — поля страницы под тонкой линейкой */
+  .ui-widget {
+    border: 0;
+    border-top: var(--rule);
+    border-radius: 0;
+    padding: 14px 0 6px;
+  }
+  .ui-widget > div:first-child {
+    font-family: var(--d-font-display);
+    font-style: italic;
+    font-weight: 400;
+    font-size: 20px;
+    text-transform: none;
+    letter-spacing: 0;
+    opacity: 1;
+  }
+  .ui-widget > div:first-child > span {
+    font-family: var(--d-font-num);
+    font-style: normal;
+    font-size: 11px;
+    color: var(--c-faint);
+  }
+
+  /* ---------- кольцо таймера: циферблат с делениями ---------- */
+  .ui-ring-track {
+    stroke: var(--c-faint);
+  }
+  .ui-ring-bar {
+    stroke: var(--c-accent);
+    stroke-linecap: butt;
+  }
+  .ui-ring-bar[data-phase='break'] {
+    stroke: var(--c-text);
+  }
+  /* 60 делений по окружности, каждое пятое — крупнее (длина окружности: 2π·52 и 2π·108) */
+  .ui-widget .ui-ring-track {
+    stroke-width: 7;
+    stroke-dasharray: 2 3.4455 1 4.4455 1 4.4455 1 4.4455 1 4.4455;
+    stroke-dashoffset: 1;
+  }
+  .ui-widget .ui-ring-bar {
+    stroke-width: 7;
+  }
+  .ui-timer .ui-ring-track {
+    stroke-width: 10;
+    stroke-dasharray: 3 8.3097 1.5 9.8097 1.5 9.8097 1.5 9.8097 1.5 9.8097;
+    stroke-dashoffset: 1.5;
+  }
+  .ui-display {
+    font-variant-numeric: lining-nums tabular-nums;
+  }
+  .ui-timer > div:first-child {
+    font-family: var(--d-font-display);
+    font-style: italic;
+    font-weight: 400;
+    font-size: 1.2rem;
+    color: var(--c-text);
+  }
+  .ui-timer .ui-display {
+    font-size: 3.5rem;
+    letter-spacing: -0.03em;
+  }
+  /* фокусы подряд: закрашенные и пустые квадратики */
+  .ui-timer [aria-label^='Фокусов'] > span {
+    border-radius: 1px;
+  }
+  .ui-timer [aria-label^='Фокусов'] > .bg-line {
+    background: transparent;
+    box-shadow: inset 0 0 0 1.25px var(--c-faint);
+  }
+
+  /* ---------- привычки: чернильные штампы ---------- */
+  .ui-habit-cell[data-state='todo'] {
+    border: 1.5px solid var(--c-faint);
+  }
+  .ui-habit-cell[data-state='todo']:hover {
+    background: rgb(255 224 102 / 0.55);
+    border-color: var(--c-text);
+  }
+  .ui-habit-cell[data-state='done'] {
+    /* цвет привычки виден точкой у названия; отметка — чернилами */
+    background: var(--c-text) !important;
+    color: var(--c-bg);
+  }
+
+  /* ---------- матрица: четыре колонки под линейкой ---------- */
+  .ui-quadrant > header > h2 {
+    font-family: var(--d-font-display);
+    font-style: italic;
+    font-weight: 600;
+    font-size: 1.15rem;
+    line-height: 1.2;
+  }
+  .ui-quadrant > header > h2::before {
+    margin-right: 8px;
+    font-family: var(--d-font-num);
+    font-style: normal;
+    font-weight: 500;
+    font-size: 11px;
+    color: var(--c-faint);
+  }
+  .ui-quadrant[data-quadrant='1'] > header > h2::before {
+    content: '01';
+    content: '01' / '';
+  }
+  .ui-quadrant[data-quadrant='2'] > header > h2::before {
+    content: '02';
+    content: '02' / '';
+  }
+  .ui-quadrant[data-quadrant='3'] > header > h2::before {
+    content: '03';
+    content: '03' / '';
+  }
+  .ui-quadrant[data-quadrant='4'] > header > h2::before {
+    content: '04';
+    content: '04' / '';
+  }
+  .ui-quadrant > header > span:last-child {
+    font-family: var(--d-font-num);
+  }
+  /* сюда перетаскивают задачу */
+  .ui-quadrant.ring-2 {
+    border-top-color: var(--c-accent);
+    background: rgb(255 224 102 / 0.18);
+  }
+  /* на телефоне квадранты по высоте содержимого, без обрезки списка */
+  @media (max-width: 767px) {
+    div:has(> .ui-quadrant) {
+      grid-auto-rows: max-content;
+    }
+  }
+
+  /* ---------- неделя ---------- */
+  .ui-week-head {
+    background: var(--grain), var(--c-bg);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+  .ui-week-head .rounded-full {
+    font-family: var(--d-font-display);
+    font-weight: 700;
+    font-size: 15px;
+    font-variant-numeric: lining-nums;
+  }
+  /* часы и длительности — моноширинным, как в расписании */
+  .ui-week .text-\[11px\] {
+    font-family: var(--d-font-num);
+    font-size: 10.5px;
+  }
+  .ui-week-day[data-today='true'] {
+    background-color: transparent;
+  }
+  @media (min-width: 768px) {
+    .ui-week-day[data-today='true'] {
+      background-color: rgb(255 224 102 / 0.13);
+    }
+  }
+  .ui-block {
+    border-radius: 2px;
+  }
+  .ui-block > div:first-child {
+    font-weight: 600;
+  }
+
+  /* панель задач без времени — список под линейкой */
+  .ui-panel {
+    background: linear-gradient(90deg, rgb(27 24 19 / 0.045), transparent 24px);
+  }
+  :is(.ui-panel, .ui-sheet) h2.text-sm {
+    font-family: var(--d-font-display);
+    font-style: italic;
+    font-weight: 400;
+    font-size: 1.2rem;
+  }
+  [data-panel-task] {
+    margin-bottom: 0;
+    padding: 8px 6px;
+    border: 0;
+    border-bottom: 1px solid var(--c-line);
+    border-radius: 0;
+    background: transparent;
+  }
+  [data-panel-task]:hover {
+    background: rgb(255 224 102 / 0.22);
+  }
+  [data-panel-task].bg-accent-soft {
+    background: var(--c-accent-soft);
+    box-shadow: inset 3px 0 0 var(--c-accent);
+  }
+
+  /* полоска дней на телефоне */
+  [role='tablist'][aria-label='День недели'] > [role='tab'] {
+    border-radius: var(--d-r-ctl);
+  }
+  [role='tablist'][aria-label='День недели'] > [role='tab'] > span {
+    font-family: var(--d-font-display);
+    font-size: 16px;
+    font-weight: 700;
+    font-variant-numeric: lining-nums;
+  }
+  [role='tablist'][aria-label='День недели'] > [role='tab'].text-accent > span {
+    text-decoration: underline 2px;
+    text-underline-offset: 3px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .ui-check,
+    .ui-btn,
+    .ui-iconbtn,
+    .ui-habit-cell {
+      transition: none;
+    }
+    .ui-check:active {
+      transform: none;
+    }
   }
 }

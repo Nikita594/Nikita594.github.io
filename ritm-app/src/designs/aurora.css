@@ -6,9 +6,9 @@
   --c-surface-2: rgb(255 255 255 / 0.07);
   --c-text: #f1f0ff;
   --c-muted: #b4b2d4;
-  --c-faint: #8c89b3;
+  --c-faint: #8f8cb8;
   --c-line: rgb(255 255 255 / 0.1);
-  --c-accent: #8b93ff;
+  --c-accent: #a1a8ff;
   --c-accent-soft: rgb(129 140 248 / 0.18);
   --c-on-accent: #0b0b18;
   --c-p1: #60a5fa;
@@ -18,140 +18,668 @@
   --grad-b: #818cf8;
   --grad-c: #e879f9;
   --grad: linear-gradient(120deg, var(--grad-a), var(--grad-b) 45%, var(--grad-c));
+  --grad-v: linear-gradient(180deg, var(--grad-a), var(--grad-b) 55%, var(--grad-c));
+  --glow: rgb(129 140 248 / 0.55);
   --d-font-text: 'Onest Variable', system-ui, sans-serif;
   --d-font-display: 'Unbounded Variable', 'Onest Variable', system-ui, sans-serif;
   --d-font-num: 'Unbounded Variable', system-ui, sans-serif;
   --d-r-card: 22px;
   --d-r-ctl: 12px;
   --d-r-check: 50%;
-  --card-bg: rgb(255 255 255 / 0.055);
+  /* стекло: лёгкий блик сверху, тонкая светлая кромка */
+  --card-bg: linear-gradient(160deg, rgb(255 255 255 / 0.075), rgb(255 255 255 / 0.035) 60%);
   --card-border: 1px solid rgb(255 255 255 / 0.1);
-  --card-shadow: none;
+  --card-shadow: inset 0 1px 0 rgb(255 255 255 / 0.06), 0 24px 48px -28px rgb(0 0 0 / 0.7);
   --card-blur: blur(24px) saturate(140%);
   --display-weight: 700;
   --display-tracking: -0.02em;
   --display-style: normal;
-  --preview-bg:
-    radial-gradient(60% 60% at 0% 0%, rgb(20 184 166 / 0.5), transparent 70%),
-    radial-gradient(60% 60% at 100% 0%, rgb(124 58 237 / 0.5), transparent 70%), #06060d;
+  --logo-bg: #818cf8;
+  --logo-fg: #0b0b18;
   color-scheme: dark;
+  scrollbar-color: rgb(255 255 255 / 0.16) transparent;
+}
+
+/* фон превью в настройках — только у самого превью, иначе он протекает в превью других дизайнов */
+.ui-preview[data-design='aurora'] {
+  --preview-bg:
+    radial-gradient(1px 1px at 78% 22%, #fff9, transparent), radial-gradient(1px 1px at 58% 70%, #fff6, transparent),
+    radial-gradient(1px 1px at 90% 82%, #fff5, transparent), radial-gradient(70% 55% at 0% 0%, rgb(45 212 191 / 0.34), transparent 70%),
+    radial-gradient(60% 60% at 100% 0%, rgb(124 58 237 / 0.42), transparent 70%),
+    radial-gradient(70% 50% at 60% 115%, rgb(219 39 119 / 0.3), transparent 70%), #06060d;
 }
 
 /* Стили действуют внутри [data-design='aurora'], но не внутри вложенного превью другого дизайна (настройки). */
 @scope ([data-design='aurora']) to ([data-design]:not([data-design='aurora'])) {
-  /* фон: размытые пятна сияния и звёзды */
-  .ui-backdrop {
-    background:
-      radial-gradient(1px 1px at 12% 30%, #fff8, transparent), radial-gradient(1px 1px at 72% 12%, #fff6, transparent),
-      radial-gradient(1px 1px at 88% 64%, #fff5, transparent), radial-gradient(1px 1px at 33% 78%, #fff4, transparent),
-      radial-gradient(1.5px 1.5px at 55% 40%, #fff7, transparent),
-      radial-gradient(40% 35% at 8% 0%, rgb(20 184 166 / 0.45), transparent 70%),
-      radial-gradient(40% 40% at 95% 5%, rgb(124 58 237 / 0.42), transparent 70%),
-      radial-gradient(45% 35% at 55% 105%, rgb(219 39 119 / 0.3), transparent 70%), var(--c-bg);
+  ::selection {
+    background: rgb(129 140 248 / 0.4);
+    color: var(--c-text);
   }
 
+  /* фокус с клавиатуры: светлая обводка и мягкое свечение */
+  :is(a, button, [tabindex]):focus-visible {
+    outline: 2px solid var(--c-accent);
+    outline-offset: 2px;
+    box-shadow:
+      0 0 0 5px rgb(129 140 248 / 0.2),
+      0 0 18px rgb(232 121 249 / 0.3);
+  }
+
+  /* фон: пятна сияния и звёзды */
+  .ui-backdrop {
+    background:
+      radial-gradient(42% 36% at 6% -4%, rgb(45 212 191 / 0.34), transparent 70%),
+      radial-gradient(38% 42% at 97% 2%, rgb(124 58 237 / 0.36), transparent 70%),
+      radial-gradient(34% 30% at 60% 30%, rgb(99 102 241 / 0.08), transparent 70%),
+      radial-gradient(50% 36% at 52% 108%, rgb(219 39 119 / 0.26), transparent 70%), linear-gradient(180deg, #070712, #05050b);
+  }
+
+  .ui-backdrop::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image:
+      radial-gradient(1px 1px at 40px 60px, rgb(255 255 255 / 0.55), transparent),
+      radial-gradient(1px 1px at 210px 30px, rgb(255 255 255 / 0.35), transparent),
+      radial-gradient(1.5px 1.5px at 300px 190px, rgb(255 255 255 / 0.6), transparent),
+      radial-gradient(1px 1px at 120px 250px, rgb(255 255 255 / 0.3), transparent),
+      radial-gradient(1px 1px at 380px 110px, rgb(200 210 255 / 0.45), transparent),
+      radial-gradient(1px 1px at 90px 160px, rgb(255 255 255 / 0.25), transparent),
+      radial-gradient(1.5px 1.5px at 470px 330px, rgb(220 255 250 / 0.5), transparent),
+      radial-gradient(1px 1px at 230px 420px, rgb(255 255 255 / 0.3), transparent);
+    background-size:
+      420px 300px,
+      420px 300px,
+      420px 300px,
+      420px 300px,
+      420px 300px,
+      420px 300px,
+      560px 480px,
+      560px 480px;
+    -webkit-mask-image: linear-gradient(180deg, #000 0%, rgb(0 0 0 / 0.55) 60%, rgb(0 0 0 / 0.2) 100%);
+    mask-image: linear-gradient(180deg, #000 0%, rgb(0 0 0 / 0.55) 60%, rgb(0 0 0 / 0.2) 100%);
+  }
+
+  /* боковое меню: парящая стеклянная панель */
   .ui-sidebar {
-    background: rgb(255 255 255 / 0.04);
-    border-right: 1px solid rgb(255 255 255 / 0.08);
-    backdrop-filter: blur(24px);
-    -webkit-backdrop-filter: blur(24px);
+    --logo-bg: url(#ui-grad);
+    margin: 10px 0 10px 10px;
+    overflow: hidden;
+    border: 1px solid rgb(255 255 255 / 0.09);
+    border-radius: var(--d-r-card);
+    background: linear-gradient(180deg, rgb(255 255 255 / 0.06), rgb(255 255 255 / 0.025));
+    box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.06);
+    backdrop-filter: blur(24px) saturate(140%);
+    -webkit-backdrop-filter: blur(24px) saturate(140%);
+  }
+
+  .ui-brand span {
+    font-weight: 700;
+    letter-spacing: -0.02em;
+  }
+
+  .ui-nav-item {
+    transition:
+      background-color 0.15s,
+      color 0.15s;
+  }
+
+  .ui-nav-item:hover {
+    background: rgb(255 255 255 / 0.06);
   }
 
   .ui-nav-item[aria-current='page'] {
-    background: rgb(255 255 255 / 0.09);
-    box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.12);
+    background: linear-gradient(100deg, rgb(94 234 212 / 0.16), rgb(129 140 248 / 0.13) 60%, rgb(232 121 249 / 0.08));
+    box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.13);
+    color: var(--c-text);
   }
 
   .ui-nav-item[aria-current='page'] svg {
     stroke: url(#ui-grad);
   }
 
+  .ui-nav-label {
+    font-size: 11px;
+    letter-spacing: 0.14em;
+  }
+
+  /* поиск в меню лежит на бирюзовом сиянии — текст светлее обычного бледного */
+  .ui-search {
+    border-color: rgb(255 255 255 / 0.1);
+    background: rgb(255 255 255 / 0.04);
+    color: var(--c-muted);
+    transition:
+      background-color 0.15s,
+      border-color 0.15s;
+  }
+
+  .ui-search:hover {
+    border-color: rgb(255 255 255 / 0.18);
+    background: rgb(255 255 255 / 0.07);
+  }
+
+  .ui-search kbd {
+    border-color: rgb(255 255 255 / 0.16);
+  }
+
+  /* заголовок экрана */
   .ui-header {
     background: transparent;
     border-bottom-color: transparent;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
   }
 
   .ui-title {
+    font-size: 1.2rem;
     font-weight: 600;
   }
 
-  .ui-check {
-    border-color: rgb(255 255 255 / 0.3);
-    width: 22px;
-    height: 22px;
-  }
-
-  .ui-check[data-priority='3'] {
-    border-color: transparent;
+  /* «Сегодня» */
+  .ui-hero {
     background:
-      linear-gradient(var(--c-bg), var(--c-bg)) padding-box,
-      conic-gradient(from 200deg, var(--grad-a), var(--grad-b), var(--grad-c), var(--grad-a)) border-box;
+      radial-gradient(70% 110% at 0% 0%, rgb(45 212 191 / 0.13), transparent 60%),
+      radial-gradient(55% 90% at 100% 100%, rgb(232 121 249 / 0.09), transparent 60%), var(--card-bg);
   }
 
-  .ui-check[aria-checked='true'] {
-    background: var(--grad);
-    color: var(--c-on-accent);
-    box-shadow: 0 0 16px rgb(129 140 248 / 0.55);
-  }
-
-  .ui-task:hover {
-    background: rgb(255 255 255 / 0.05);
-  }
-
-  .ui-addtask-plus {
-    background: var(--grad);
-    color: var(--c-on-accent);
-    border-radius: 9px;
-    box-shadow: 0 6px 20px rgb(129 140 248 / 0.35);
-  }
-
-  .ui-btn[data-variant='primary'] {
-    box-shadow: 0 8px 26px rgb(129 140 248 / 0.35);
-  }
-
-  .ui-bottomnav {
-    background: rgb(17 17 30 / 0.7);
-    border-top-color: rgb(255 255 255 / 0.08);
-  }
-
-  .ui-tab[aria-current='page'] {
-    color: var(--c-text);
-  }
-
-  .ui-tab[aria-current='page'] svg {
-    stroke: url(#ui-grad);
-    filter: drop-shadow(0 0 8px rgb(129 140 248 / 0.7));
-  }
-
-  .ui-modal,
-  .ui-drawer,
-  .ui-sheet {
-    background: rgb(17 17 30 / 0.92);
-    backdrop-filter: blur(30px) saturate(140%);
-    -webkit-backdrop-filter: blur(30px) saturate(140%);
-    border: 1px solid rgb(255 255 255 / 0.08);
-  }
-
-  .ui-toast {
-    background: rgb(30 30 52 / 0.92);
-    color: var(--c-text);
-    border: 1px solid rgb(255 255 255 / 0.12);
-    backdrop-filter: blur(20px);
-  }
-
-  .ui-hero-title b,
-  .ui-display.ui-grad-text {
+  .ui-hero-title b {
     background: var(--grad);
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;
   }
 
+  .ui-load-bar {
+    background: rgb(255 255 255 / 0.1);
+  }
+
   .ui-load-bar[data-today='true'] {
-    box-shadow: 0 0 18px rgb(129 140 248 / 0.45);
+    background: var(--grad-v);
+    box-shadow: 0 0 16px rgb(129 140 248 / 0.5);
+  }
+
+  .ui-widget[data-kind='focus'] {
+    background: radial-gradient(80% 70% at 50% 35%, rgb(124 58 237 / 0.16), transparent 70%), var(--card-bg);
+  }
+
+  /* список дел на «Сегодня» — в стеклянной карточке */
+  .ui-tasks {
+    padding: 6px;
+    border: var(--card-border);
+    border-radius: var(--d-r-card);
+    background: var(--card-bg);
+    box-shadow: var(--card-shadow);
+    backdrop-filter: var(--card-blur);
+    -webkit-backdrop-filter: var(--card-blur);
+  }
+
+  .ui-tasks:not(:has(.ui-task, .ui-empty, .ui-section)) {
+    display: none;
+  }
+
+  .ui-tasks .ui-section {
+    margin-top: 6px;
+  }
+
+  .ui-tasks .ui-empty {
+    padding-block: 40px;
+  }
+
+  /* разделы списка */
+  .ui-section-title {
+    border-radius: 8px;
+    font-size: 11px;
+    letter-spacing: 0.14em;
+  }
+
+  /* после заголовка раздела — тонкая гаснущая линия */
+  .ui-section-title::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    margin-left: 8px;
+    background: linear-gradient(90deg, rgb(255 255 255 / 0.12), transparent);
+  }
+
+  /* строка задачи */
+  .ui-task {
+    border-radius: 14px;
+    transition: background-color 0.15s;
+  }
+
+  .ui-task:hover {
+    background: rgb(255 255 255 / 0.05);
+  }
+
+  .ui-task-time {
+    font-weight: 500;
+    letter-spacing: -0.01em;
+  }
+
+  .ui-chip {
+    padding: 0 7px 0 6px;
+    border-radius: 999px;
+    background: rgb(255 255 255 / 0.065);
+    line-height: 18px;
+  }
+
+  /* галочка: низкий — голубая, средний — янтарная, высокий — кольцо сияния */
+  .ui-check {
+    position: relative;
+    width: 22px;
+    height: 22px;
+    border-color: rgb(255 255 255 / 0.3);
+  }
+
+  .ui-check[data-priority='1'] {
+    border-color: var(--c-p1);
+  }
+
+  .ui-check[data-priority='2'] {
+    border-color: var(--c-p2);
+  }
+
+  .ui-check[data-priority='3'] {
+    border-color: transparent;
+  }
+
+  .ui-check[data-priority='3']::before {
+    content: '';
+    position: absolute;
+    inset: -2px;
+    padding: 2px;
+    border-radius: inherit;
+    background: conic-gradient(from 200deg, var(--grad-a), var(--grad-b), var(--grad-c), var(--grad-a));
+    -webkit-mask:
+      linear-gradient(#000 0 0) content-box,
+      linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask:
+      linear-gradient(#000 0 0) content-box exclude,
+      linear-gradient(#000 0 0);
+  }
+
+  .ui-task:hover .ui-check:not([aria-checked='true']) {
+    background: rgb(255 255 255 / 0.06);
+  }
+
+  .ui-check[aria-checked='true'] {
+    border-color: transparent;
+    background: var(--grad);
+    color: var(--c-on-accent);
+    box-shadow: 0 0 14px var(--glow);
+  }
+
+  .ui-check[aria-checked='true']::before {
+    display: none;
+  }
+
+  /* строка быстрого ввода: при фокусе — кромка-градиент */
+  .ui-addtask {
+    position: relative;
+  }
+
+  .ui-addtask::before {
+    content: '';
+    position: absolute;
+    inset: -1px;
+    padding: 1px;
+    border-radius: inherit;
+    background: var(--grad);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s;
+    -webkit-mask:
+      linear-gradient(#000 0 0) content-box,
+      linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask:
+      linear-gradient(#000 0 0) content-box exclude,
+      linear-gradient(#000 0 0);
+  }
+
+  .ui-addtask:focus-within {
+    border-color: transparent;
+    box-shadow:
+      var(--card-shadow),
+      0 0 28px -6px rgb(129 140 248 / 0.45);
+  }
+
+  .ui-addtask:focus-within::before {
+    opacity: 1;
+  }
+
+  .ui-addtask-plus {
+    background: var(--grad);
+    color: var(--c-on-accent);
+    border-radius: 9px;
+    box-shadow: 0 6px 18px -4px rgb(129 140 248 / 0.6);
+  }
+
+  /* кнопки */
+  .ui-btn {
+    transition:
+      background-color 0.15s,
+      color 0.15s,
+      box-shadow 0.15s,
+      filter 0.15s;
+  }
+
+  .ui-btn[data-variant='primary'] {
+    font-weight: 600;
+    box-shadow:
+      inset 0 1px 0 rgb(255 255 255 / 0.35),
+      0 8px 24px -8px rgb(129 140 248 / 0.75);
+  }
+
+  .ui-btn[data-variant='primary']:hover {
+    opacity: 1;
+    filter: brightness(1.08) saturate(1.1);
+  }
+
+  .ui-btn[data-variant='soft'] {
+    background: rgb(255 255 255 / 0.07);
+    box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.08);
+  }
+
+  .ui-btn[data-variant='soft']:hover,
+  .ui-btn[data-variant='ghost']:hover {
+    background: rgb(255 255 255 / 0.1);
+  }
+
+  .ui-btn[data-variant='danger'] {
+    color: #f9a8d4;
+  }
+
+  .ui-btn[data-variant='danger']:hover {
+    background: rgb(244 114 182 / 0.12);
+  }
+
+  .ui-iconbtn:hover {
+    background: rgb(255 255 255 / 0.08);
+  }
+
+  /* поля ввода и списки выбора (кроме «невидимых» полей с прозрачной рамкой, как у подзадач) */
+  .ui-input:not(.border-transparent) {
+    border-color: rgb(255 255 255 / 0.12);
+    background-color: rgb(255 255 255 / 0.045);
+    transition:
+      border-color 0.15s,
+      box-shadow 0.15s;
+  }
+
+  .ui-input:not(.border-transparent):hover {
+    border-color: rgb(255 255 255 / 0.2);
+  }
+
+  .ui-input:not(.border-transparent):is(:focus, :focus-within) {
+    border-color: var(--c-accent);
+    box-shadow: 0 0 0 3px rgb(129 140 248 / 0.22);
+  }
+
+  .ui-input option,
+  .ui-input optgroup {
+    background: #15152a;
+    color: var(--c-text);
+  }
+
+  /* окна, панель задачи, меню телефона */
+  .ui-overlay {
+    background: rgb(3 3 10 / 0.6);
+  }
+
+  .ui-modal,
+  .ui-drawer,
+  .ui-sheet {
+    background:
+      radial-gradient(90% 40% at 0% 0%, rgb(45 212 191 / 0.08), transparent 70%),
+      radial-gradient(80% 40% at 100% 0%, rgb(124 58 237 / 0.12), transparent 70%), rgb(15 15 28 / 0.94);
+    border: 1px solid rgb(255 255 255 / 0.09);
+    box-shadow:
+      inset 0 1px 0 rgb(255 255 255 / 0.05),
+      0 30px 80px -20px rgb(0 0 0 / 0.8);
+    backdrop-filter: blur(30px) saturate(140%);
+    -webkit-backdrop-filter: blur(30px) saturate(140%);
+  }
+
+  .ui-sheet {
+    --logo-bg: url(#ui-grad);
+    --c-surface: rgb(255 255 255 / 0.045);
+  }
+
+  .ui-drawer {
+    border-width: 0 0 0 1px;
+  }
+
+  /* выбранный приоритет в карточке задачи — с рамкой, а не только цветом */
+  .ui-drawer [role='radiogroup'] {
+    flex-wrap: wrap;
+  }
+
+  .ui-drawer [role='radio'][aria-checked='true'],
+  .ui-modal [role='radio'][aria-checked='true'] {
+    background: rgb(255 255 255 / 0.09);
+    box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.2);
+  }
+
+  /* дни недели в окне привычки: выбранный — с рамкой и переливом, а не сплошной заливкой */
+  .ui-modal button[aria-pressed='true']:not(.ui-habit-cell) {
+    background: linear-gradient(160deg, rgb(94 234 212 / 0.2), rgb(129 140 248 / 0.26) 55%, rgb(232 121 249 / 0.2));
+    color: var(--c-text);
+    font-weight: 600;
+    box-shadow: inset 0 0 0 1px rgb(161 168 255 / 0.55);
+  }
+
+  .ui-toast {
+    background: rgb(24 24 44 / 0.9);
+    color: var(--c-text);
+    border: 1px solid rgb(255 255 255 / 0.12);
+    box-shadow:
+      inset 0 1px 0 rgb(255 255 255 / 0.06),
+      0 16px 40px -12px rgb(0 0 0 / 0.8),
+      0 0 30px -10px rgb(129 140 248 / 0.4);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+  }
+
+  /* пустые экраны: тихое сияние над текстом */
+  .ui-empty {
+    background: radial-gradient(160px 90px at 50% 36px, rgb(129 140 248 / 0.14), transparent 70%);
+  }
+
+  .ui-empty::before {
+    content: '';
+    display: block;
+    width: 44px;
+    height: 44px;
+    margin: 0 auto 14px;
+    border-radius: 50%;
+    padding: 2px;
+    background: conic-gradient(from 200deg, var(--grad-a), var(--grad-b), var(--grad-c), var(--grad-a));
+    opacity: 0.85;
+    -webkit-mask:
+      linear-gradient(#000 0 0) content-box,
+      linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask:
+      linear-gradient(#000 0 0) content-box exclude,
+      linear-gradient(#000 0 0);
+  }
+
+  .ui-empty > p:first-child {
+    font-family: var(--d-font-display);
+    font-size: 15px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+  }
+
+  /* таймер */
+  .ui-timer {
+    background:
+      radial-gradient(60% 55% at 50% 32%, rgb(124 58 237 / 0.17), transparent 70%),
+      radial-gradient(50% 40% at 0% 0%, rgb(45 212 191 / 0.08), transparent 70%), var(--card-bg);
+  }
+
+  .ui-ring-track {
+    stroke: rgb(255 255 255 / 0.08);
   }
 
   .ui-ring-bar {
     filter: drop-shadow(0 0 10px rgb(129 140 248 / 0.6));
+  }
+
+  .ui-ring-bar[data-phase='break'] {
+    filter: drop-shadow(0 0 10px rgb(96 165 250 / 0.55));
+  }
+
+  /* привычки */
+  .ui-habit-cell[data-state='todo'] {
+    border-color: rgb(255 255 255 / 0.16);
+  }
+
+  .ui-habit-cell[data-state='todo']:hover {
+    border-color: rgb(255 255 255 / 0.36);
+    background: rgb(255 255 255 / 0.05);
+  }
+
+  .ui-habit-cell[data-state='done'] {
+    box-shadow:
+      inset 0 1px 0 rgb(255 255 255 / 0.35),
+      inset 0 -5px 10px rgb(0 0 0 / 0.14);
+  }
+
+  /* матрица: у каждой четверти свой оттенок сияния */
+  .ui-quadrant {
+    background: radial-gradient(90% 70% at 0% 0%, var(--q-glow, transparent), transparent 70%), var(--card-bg);
+  }
+
+  .ui-quadrant[data-quadrant='1'] {
+    --q-glow: rgb(232 121 249 / 0.11);
+  }
+
+  .ui-quadrant[data-quadrant='2'] {
+    --q-glow: rgb(129 140 248 / 0.13);
+  }
+
+  .ui-quadrant[data-quadrant='3'] {
+    --q-glow: rgb(96 165 250 / 0.11);
+  }
+
+  .ui-quadrant[data-quadrant='4'] {
+    --q-glow: rgb(255 255 255 / 0.04);
+  }
+
+  .ui-quadrant .ui-addtask {
+    margin-bottom: 0;
+    background: rgb(255 255 255 / 0.04);
+    box-shadow: none;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+
+  /* на телефоне четверть растёт по содержимому, без прокрутки внутри */
+  @media (max-width: 767px) {
+    :has(> .ui-quadrant) {
+      grid-auto-rows: max-content;
+    }
+
+    .ui-quadrant > header + div {
+      flex: 1 0 auto;
+      overflow: visible;
+    }
+  }
+
+  /* неделя */
+  .ui-week {
+    --c-line: rgb(255 255 255 / 0.07);
+  }
+
+  .ui-week-head {
+    background: rgb(8 8 18 / 0.88);
+    backdrop-filter: blur(16px) saturate(140%);
+    -webkit-backdrop-filter: blur(16px) saturate(140%);
+  }
+
+  .ui-week-head .bg-accent {
+    background: var(--grad);
+    font-weight: 600;
+    box-shadow: 0 0 14px rgb(129 140 248 / 0.55);
+  }
+
+  .ui-week-day[data-today='true'] {
+    background-color: rgb(129 140 248 / 0.06);
+  }
+
+  .ui-week-day .bg-p3 {
+    box-shadow: 0 0 10px rgb(244 114 182 / 0.7);
+  }
+
+  .ui-block {
+    border-radius: 10px;
+  }
+
+  .ui-panel {
+    --c-surface: rgb(255 255 255 / 0.045);
+    background: rgb(255 255 255 / 0.025);
+    border-left-color: rgb(255 255 255 / 0.08);
+  }
+
+  /* полоска дней на телефоне */
+  [role='tab'][aria-selected='true'] {
+    background: var(--grad);
+    color: var(--c-on-accent);
+    font-weight: 600;
+    box-shadow: 0 6px 18px -6px rgb(129 140 248 / 0.7);
+  }
+
+  /* нижняя панель телефона */
+  .ui-bottomnav {
+    background: linear-gradient(180deg, rgb(20 20 36 / 0.72), rgb(10 10 20 / 0.88));
+    border-top-color: rgb(255 255 255 / 0.08);
+    backdrop-filter: blur(20px) saturate(150%);
+    -webkit-backdrop-filter: blur(20px) saturate(150%);
+  }
+
+  .ui-tab {
+    position: relative;
+  }
+
+  .ui-tab[aria-current='page'] {
+    color: var(--c-text);
+    font-weight: 600;
+  }
+
+  .ui-tab[aria-current='page']::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 50%;
+    width: 28px;
+    height: 3px;
+    margin-left: -14px;
+    border-radius: 0 0 3px 3px;
+    background: var(--grad);
+    box-shadow: 0 0 12px rgb(129 140 248 / 0.8);
+  }
+
+  .ui-tab[aria-current='page'] svg {
+    stroke: url(#ui-grad);
+    filter: drop-shadow(0 0 8px rgb(129 140 248 / 0.6));
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .ui-nav-item,
+    .ui-search,
+    .ui-task,
+    .ui-check,
+    .ui-addtask::before,
+    .ui-btn,
+    .ui-input {
+      transition: none;
+    }
+
+    .ui-check:active {
+      transform: none;
+    }
   }
 }
