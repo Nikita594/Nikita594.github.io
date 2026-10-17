@@ -31,13 +31,14 @@ function Ring({ progress, children, focus }: { progress: number; children: React
   return (
     <div className="relative mx-auto h-60 w-60">
       <svg viewBox="0 0 240 240" className="h-full w-full -rotate-90">
-        <circle cx="120" cy="120" r={r} fill="none" stroke="var(--c-line)" strokeWidth="10" />
+        <circle className="ui-ring-track" cx="120" cy="120" r={r} fill="none" strokeWidth="10" />
         <circle
           cx="120"
           cy="120"
           r={r}
           fill="none"
-          stroke={focus ? 'var(--c-accent)' : 'var(--c-p1)'}
+          className="ui-ring-bar"
+          data-phase={focus ? 'focus' : 'break'}
           strokeWidth="10"
           strokeLinecap="round"
           strokeDasharray={c}
@@ -93,10 +94,10 @@ export function TimerScreen() {
         </Button>
       }
     >
-      <section className="rounded-2xl border border-line bg-surface p-5">
+      <section className="ui-card ui-timer p-5">
         <div className="mb-3 text-center text-sm font-medium text-muted">{PHASE_LABEL[st.phase]}</div>
         <Ring progress={progress} focus={st.phase === 'focus'}>
-          <div className="text-5xl font-semibold tabular-nums" aria-live="off" data-testid="clock">
+          <div className="ui-display text-5xl tabular-nums" aria-live="off" data-testid="clock">
             {formatClock(left)}
           </div>
           <div className="mt-2 flex gap-1.5" aria-label={`Фокусов подряд: ${st.round}`}>
@@ -216,7 +217,7 @@ function EntryRow({ entry, category, taskTitle }: { entry: TimeEntry; category?:
   const fmt = (d: Date) => formatMinutes(d.getHours() * 60 + d.getMinutes())
   return (
     <div className="group flex items-center gap-3 rounded-lg px-2 py-2 hover:bg-surface-2" data-entry-id={entry.id}>
-      <span className="h-8 w-1 shrink-0 rounded-full" style={{ background: category?.color ?? 'var(--c-faint)' }} />
+      <span className="ui-color h-8 w-1 shrink-0 rounded-full" style={{ background: category?.color ?? 'var(--c-faint)' }} />
       <div className="min-w-0 flex-1">
         <div className="truncate text-sm">{taskTitle ?? category?.name ?? 'Без категории'}</div>
         <div className="text-xs text-muted">

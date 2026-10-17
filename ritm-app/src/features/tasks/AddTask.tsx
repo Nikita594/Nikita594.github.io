@@ -111,7 +111,7 @@ export function AddTask({
   const parsed = useQuickAddParser(text)
   return (
     <form
-      className="mb-2 rounded-xl border border-line bg-surface focus-within:border-accent"
+      className="ui-addtask mb-3"
       onSubmit={async (e) => {
         e.preventDefault()
         const value = text
@@ -129,8 +129,10 @@ export function AddTask({
         onCreated?.()
       }}
     >
-      <div className="flex items-center gap-2 px-3">
-        <Icon name="plus" size={18} className="shrink-0 text-accent" />
+      <div className="flex items-center gap-2.5 px-3">
+        <span className="ui-addtask-plus flex h-7 w-7 shrink-0 items-center justify-center">
+          <Icon name="plus" size={18} strokeWidth={2.4} />
+        </span>
         <input
           data-quick-add
           autoFocus={autoFocus}

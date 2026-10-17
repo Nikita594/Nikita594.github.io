@@ -64,10 +64,7 @@ export function MatrixScreen() {
                 const id = e.dataTransfer.getData('text/x-ritm-task')
                 if (id) void drop(id, q)
               }}
-              className={cx(
-                'flex min-h-48 flex-col rounded-2xl border bg-surface md:min-h-0',
-                over === q ? 'border-accent ring-2 ring-accent/30' : 'border-line',
-              )}
+              className={cx('ui-card ui-quadrant flex min-h-48 flex-col md:min-h-0', over === q && 'border-accent ring-2 ring-accent/30')}
             >
               <header className="flex items-baseline gap-2 px-3 pt-3">
                 <h2 className={cx('text-sm font-semibold', ACCENT[q])}>{title}</h2>

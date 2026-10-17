@@ -3,7 +3,7 @@ import { db } from '../db/db'
 import { INBOX_ID } from '../db/seed'
 import { href, useRoute } from '../lib/router'
 import { Icon, type IconName } from '../ui/icons'
-import { ColorDot, cx } from '../ui/kit'
+import { ColorDot } from '../ui/kit'
 import { Logo } from '../ui/Logo'
 import { TASK_VIEWS, TOOLS } from './nav'
 import { useTimerLabel } from '../features/timer/TimerBadge'
@@ -29,16 +29,14 @@ function NavLink({
     <a
       href={href(to)}
       onClick={onNavigate}
-      className={cx(
-        'flex h-9 items-center gap-3 rounded-lg px-3 text-sm',
-        active ? 'bg-accent-soft font-medium text-text' : 'text-muted hover:bg-surface-2 hover:text-text',
-      )}
+      aria-current={active ? 'page' : undefined}
+      className="ui-nav-item flex h-9 items-center gap-3 px-3 text-sm"
     >
       {icon ? (
         <Icon name={icon} size={18} />
       ) : (
         <span className="flex w-[18px] justify-center">
-          <ColorDot color={color!} />
+          <ColorDot color={color!} className="ui-dot" />
         </span>
       )}
       <span className="truncate">{label}</span>
@@ -54,15 +52,11 @@ export function Sidebar({ onNavigate, onAddList }: { onNavigate?: () => void; on
   const timer = useTimerLabel()
   return (
     <nav className="flex h-full flex-col gap-1 overflow-y-auto p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]" aria-label="Разделы">
-      <div className="mb-2 flex items-center gap-2 px-3 pt-1">
+      <div className="ui-brand mb-2 flex items-center gap-2 px-3 pt-1">
         <Logo />
         <span className="text-lg font-semibold tracking-tight">Ритм</span>
       </div>
-      <a
-        href={href('search')}
-        onClick={onNavigate}
-        className="mb-2 flex h-9 items-center gap-2 rounded-lg border border-line px-3 text-sm text-faint hover:border-accent"
-      >
+      <a href={href('search')} onClick={onNavigate} className="ui-search mb-2 flex h-9 items-center gap-2 px-3 text-sm">
         <Icon name="search" size={16} />
         Поиск
         <kbd className="ml-auto rounded border border-line px-1.5 text-[11px]">/</kbd>
@@ -83,7 +77,7 @@ export function Sidebar({ onNavigate, onAddList }: { onNavigate?: () => void; on
         />
       ))}
       <div className="mt-3 mb-1 flex items-center justify-between px-3">
-        <span className="text-xs font-medium tracking-wide text-faint uppercase">Списки</span>
+        <span className="ui-nav-label text-xs font-medium tracking-wide uppercase">Списки</span>
         <button
           type="button"
           onClick={onAddList}

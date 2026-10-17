@@ -19,3 +19,6 @@ db.open().then(
     ),
   () => root.render(<FallbackScreen storage />),
 )
+
+// В режиме разработки: __ritm.fillDemo() в консоли заполняет приложение примерными данными.
+if (import.meta.env.DEV) void import('./dev/demo').then((m) => Object.assign(window, { __ritm: m }))

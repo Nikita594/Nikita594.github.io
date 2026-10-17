@@ -1,4 +1,4 @@
-import type { Category, List, Priority, Task } from '../../db/types'
+import type { Category, List, Task } from '../../db/types'
 import { completeTask, deleteTask, reopenTask } from '../../db/tasks'
 import { diffDays, formatDayLabel, formatDuration, formatMinutes, todayStr } from '../../domain/dates'
 import { INBOX_ID } from '../../db/seed'
@@ -7,19 +7,6 @@ import { Icon } from '../../ui/icons'
 import { ColorDot, cx } from '../../ui/kit'
 import { toast } from '../../ui/toast'
 import { openTask } from './editorStore'
-
-const PRIORITY_RING: Record<Priority, string> = {
-  0: 'border-faint',
-  1: 'border-p1',
-  2: 'border-p2',
-  3: 'border-p3',
-}
-const PRIORITY_FILL: Record<Priority, string> = {
-  0: 'bg-faint',
-  1: 'bg-p1',
-  2: 'bg-p2',
-  3: 'bg-p3',
-}
 
 export function TaskCheckbox({ task, onToggle }: { task: Task; onToggle?: (done: boolean) => void }) {
   const done = task.status === 'done'
@@ -33,10 +20,9 @@ export function TaskCheckbox({ task, onToggle }: { task: Task; onToggle?: (done:
         e.stopPropagation()
         onToggle ? onToggle(!done) : void toggleTask(task)
       }}
-      className={cx(
-        'flex h-5 w-5 shrink-0 items-center justify-center rounded-md border-2 transition-colors',
-        done ? cx(PRIORITY_FILL[task.priority], 'border-transparent text-white') : PRIORITY_RING[task.priority],
-      )}
+      // форму и цвет галочки задаёт дизайн (крючок ui-check, src/designs)
+      data-priority={task.priority}
+      className="ui-check"
     >
       {done && <Icon name="check" size={14} strokeWidth={3} />}
     </button>
@@ -91,14 +77,7 @@ export function TaskRow({
   // «Входящие» не подписываем — это список по умолчанию
   if (list?.id === INBOX_ID) showList = false
   const hasMeta =
-    (!hideDate && task.dueDate) ||
-    (hideDate && task.dueTime !== undefined) ||
-    task.durationMin ||
-    task.subtasks.length ||
-    task.repeat ||
-    category ||
-    (showList && list) ||
-    task.note
+    (!hideDate && task.dueDate) || task.durationMin || task.subtasks.length || task.repeat || category || (showList && list) || task.note
   return (
     <div
       role="button"
@@ -107,26 +86,19 @@ export function TaskRow({
       onKeyDown={(e) => {
         if (e.key === 'Enter' && e.target === e.currentTarget) openTask(task.id)
       }}
-      className="group flex cursor-pointer items-start gap-3 rounded-lg px-2 py-2 hover:bg-surface-2"
+      className="ui-task group flex cursor-pointer items-start gap-3 px-2 py-2"
       data-task-id={task.id}
+      data-done={done}
+      data-priority={task.priority}
     >
       <div className="pt-0.5">
         <TaskCheckbox task={task} />
       </div>
       <div className="min-w-0 flex-1">
-        <div className={cx('text-sm leading-5 break-words', done && 'text-faint line-through')}>{task.title || 'Без названия'}</div>
+        <div className="ui-task-title text-sm leading-5 break-words">{task.title || 'Без названия'}</div>
         {hasMeta ? (
-          <div className="mt-0.5 flex flex-wrap items-center gap-x-3 gap-y-0.5 text-xs text-muted">
-            {hideDate ? (
-              task.dueTime !== undefined && (
-                <span className="inline-flex items-center gap-1">
-                  <Icon name="clock" size={13} />
-                  {formatMinutes(task.dueTime)}
-                </span>
-              )
-            ) : (
-              <DueLabel task={task} />
-            )}
+          <div className="ui-task-meta mt-0.5 flex flex-wrap items-center gap-x-3 gap-y-0.5 text-xs">
+            {!hideDate && <DueLabel task={task} />}
             {task.durationMin ? (
               <span className="inline-flex items-center gap-1">
                 <Icon name="clock" size={13} />
@@ -147,7 +119,7 @@ export function TaskRow({
             )}
             {task.note && <Icon name="note" size={13} aria-label="Есть заметка" />}
             {category && (
-              <span className="inline-flex items-center gap-1">
+              <span className="ui-chip inline-flex items-center gap-1">
                 <ColorDot color={category.color} size={7} />
                 {category.name}
               </span>
@@ -161,6 +133,10 @@ export function TaskRow({
           </div>
         ) : null}
       </div>
+      {/* на экранах дня время — справа, крупно */}
+      {hideDate && task.dueTime !== undefined && (
+        <span className="ui-task-time shrink-0 pt-0.5 font-num text-sm tabular-nums">{formatMinutes(task.dueTime)}</span>
+      )}
     </div>
   )
 }

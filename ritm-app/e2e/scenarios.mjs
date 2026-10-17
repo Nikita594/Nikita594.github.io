@@ -346,6 +346,8 @@ export const scenarios = {
     const clock = await page.getByTestId('clock').innerText()
     assert(clock === '15:00', 'через 10 минут осталось 15:00, а показано ' + clock)
     await page.getByRole('button', { name: 'Пауза' }).click()
+    // пауза сохраняется в базу не мгновенно: ждём, пока она применится, и только потом перематываем время
+    await page.getByRole('button', { name: 'Продолжить' }).waitFor()
     await page.clock.runFor('05:00')
     assert((await page.getByTestId('clock').innerText()) === '15:00', 'на паузе время стоит')
     await page.getByRole('button', { name: 'Продолжить' }).click()
@@ -480,6 +482,8 @@ export const scenarios = {
 
     // тёмная тема переживает перезагрузку без мигания (класс ставится до загрузки приложения)
     await page.goto(ctx.url + '#/settings')
+    // выбор темы есть только у дизайна «Монохром»
+    await page.getByRole('radio', { name: 'Монохром' }).click()
     await page.getByRole('radio', { name: 'Тёмная' }).click()
     await page.waitForFunction(() => document.documentElement.classList.contains('dark'))
     await page.reload({ waitUntil: 'domcontentloaded' })
@@ -533,6 +537,8 @@ export const scenarios = {
     await page.mouse.click(col.x + col.width / 2, col.y + (10 * 60 + 5 - 360) * 0.8)
     await page.getByRole('dialog', { name: 'Блок времени' }).getByRole('button', { name: 'Готово' }).click()
     await page.goto(ctx.url + '#/settings')
+    // выбор темы есть только у дизайна «Монохром»
+    await page.getByRole('radio', { name: 'Монохром' }).click()
     await page.getByRole('radio', { name: 'Тёмная' }).click()
     await page.waitForFunction(() => document.documentElement.classList.contains('dark'))
 

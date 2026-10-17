@@ -1,0 +1,85 @@
+/* Монохром: чёрное и белое, системный шрифт, никаких украшений. */
+
+[data-design='mono'] {
+  --logo-bg: var(--c-text);
+  --logo-fg: var(--c-bg);
+  --c-bg: #ffffff;
+  --c-surface: #ffffff;
+  --c-surface-2: #f2f2f2;
+  --c-text: #000000;
+  --c-muted: #3d3d3d;
+  --c-faint: #6b6b6b;
+  --c-line: #e0e0e0;
+  --c-accent: #000000;
+  --c-accent-soft: #efefef;
+  --c-on-accent: #ffffff;
+  --c-p1: #8a8a8a;
+  --c-p2: #4d4d4d;
+  --c-p3: #000000;
+  --grad-a: #000000;
+  --grad-b: #000000;
+  --grad-c: #000000;
+  --grad: #000000;
+  --d-font-text: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  --d-font-display: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  --d-font-num: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', Roboto, sans-serif;
+  --d-r-card: 6px;
+  --d-r-ctl: 6px;
+  --d-r-check: 4px;
+  --card-bg: #ffffff;
+  --card-border: 1px solid #e0e0e0;
+  --card-shadow: none;
+  --card-blur: none;
+  --display-weight: 700;
+  --display-tracking: -0.01em;
+  --display-style: normal;
+  color-scheme: light;
+}
+[data-design='mono'].dark {
+  --c-bg: #000000;
+  --c-surface: #000000;
+  --c-surface-2: #161616;
+  --c-text: #ffffff;
+  --c-muted: #c2c2c2;
+  --c-faint: #8f8f8f;
+  --c-line: #2a2a2a;
+  --c-accent: #ffffff;
+  --c-accent-soft: #1c1c1c;
+  --c-on-accent: #000000;
+  --c-p1: #7a7a7a;
+  --c-p2: #b3b3b3;
+  --c-p3: #ffffff;
+  --grad-a: #ffffff;
+  --grad-b: #ffffff;
+  --grad-c: #ffffff;
+  --grad: #ffffff;
+  --card-bg: #000000;
+  --card-border: 1px solid #2a2a2a;
+  color-scheme: dark;
+}
+
+/* никаких цветов: категории, привычки и блоки календаря — в оттенках серого */
+[data-design='mono'] .ui-dot,
+[data-design='mono'] .ui-block,
+[data-design='mono'] .ui-habit-cell,
+[data-design='mono'] .ui-color {
+  filter: grayscale(1);
+}
+[data-design='mono'] .ui-nav-item[aria-current='page'] {
+  background: var(--c-text);
+  color: var(--c-bg);
+}
+[data-design='mono'] .ui-tab[aria-current='page'] {
+  color: var(--c-text);
+  font-weight: 700;
+}
+[data-design='mono'] .ui-check[aria-checked='true'] {
+  background: var(--c-text);
+  color: var(--c-bg);
+}
+[data-design='mono'] .ui-hero-title b {
+  color: inherit;
+}
+[data-design='mono'] .ui-load-bar[data-today='true'] {
+  background: var(--c-text);
+}

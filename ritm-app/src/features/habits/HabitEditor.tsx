@@ -66,7 +66,7 @@ function History({ habit, checks, today }: { habit: Habit; checks: Set<DateStr>;
                   aria-label={`${formatDayLabel(d, today)}${checked ? ': отмечено' : ''}`}
                   onClick={() => void toggleCheck(habit.id, d)}
                   className={cx(
-                    'h-4 w-4 rounded-sm',
+                    'ui-color h-4 w-4 rounded-sm',
                     !checked && (future ? 'bg-transparent' : isScheduled(habit, d) ? 'bg-line' : 'bg-surface-2'),
                   )}
                   style={{ background: checked ? habit.color : undefined }}

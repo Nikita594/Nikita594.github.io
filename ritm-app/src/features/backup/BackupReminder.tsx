@@ -20,7 +20,7 @@ export function BackupReminder() {
   return (
     <div
       role="status"
-      className="fixed inset-x-3 bottom-[calc(4.5rem+env(safe-area-inset-bottom))] z-30 mx-auto flex max-w-xl flex-wrap items-center gap-2 rounded-xl border border-line bg-surface px-4 py-2.5 text-sm shadow-lg md:bottom-4 md:left-64"
+      className="fixed inset-x-3 bottom-[calc(4.5rem+env(safe-area-inset-bottom))] z-30 mx-auto flex max-w-xl flex-wrap items-center gap-2 ui-card ui-banner px-4 py-2.5 text-sm shadow-lg md:bottom-4 md:left-64"
     >
       <span className="min-w-0 flex-1">Резервной копии не было больше недели.</span>
       <Button

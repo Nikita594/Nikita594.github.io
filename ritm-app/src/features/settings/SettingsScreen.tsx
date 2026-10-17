@@ -1,16 +1,16 @@
 import type { ReactNode } from 'react'
-import { setSetting, useSettings, type SettingKey, type ThemeSetting } from '../../db/settings'
+import { setSetting, useSettings, type SettingKey } from '../../db/settings'
 import { ShortcutsTable } from '../../app/Shortcuts'
-import { cx } from '../../ui/kit'
 import { Screen } from '../../ui/Screen'
 import { pomodoro, usePomodoroState } from '../timer/pomodoroStore'
 import { BackupSettings } from '../backup/BackupSettings'
 import { CategoriesSettings } from './CategoriesSettings'
+import { DesignPicker } from './DesignPicker'
 import { NumberSetting } from './NumberSetting'
 
 export function SettingsSection({ title, children, hint }: { title: string; hint?: string; children: ReactNode }) {
   return (
-    <section className="mb-4 rounded-2xl border border-line bg-surface p-4">
+    <section className="ui-card mb-4 p-4">
       <h2 className="font-semibold">{title}</h2>
       {hint && <p className="mt-0.5 text-sm text-muted">{hint}</p>}
       <div className="mt-3">{children}</div>
@@ -31,30 +31,8 @@ export function SettingsScreen() {
       <SettingsSection title="Резервная копия" hint="Все задачи, списки, привычки, календарь и записи времени — в одном файле.">
         <BackupSettings />
       </SettingsSection>
-      <SettingsSection title="Оформление">
-        <div className="flex gap-1 rounded-xl bg-surface-2 p-1" role="radiogroup" aria-label="Тема">
-          {(
-            [
-              ['system', 'Как в системе'],
-              ['light', 'Светлая'],
-              ['dark', 'Тёмная'],
-            ] as [ThemeSetting, string][]
-          ).map(([value, label]) => (
-            <button
-              key={value}
-              type="button"
-              role="radio"
-              aria-checked={settings.theme === value}
-              onClick={() => void setSetting('theme', value)}
-              className={cx(
-                'h-9 flex-1 rounded-lg text-sm',
-                settings.theme === value ? 'bg-surface font-medium shadow-sm' : 'text-muted hover:text-text',
-              )}
-            >
-              {label}
-            </button>
-          ))}
-        </div>
+      <SettingsSection title="Оформление" hint="Дизайн меняется сразу. Данные не трогаются.">
+        <DesignPicker />
       </SettingsSection>
       <SettingsSection title="Таймер" hint="Новые длительности применятся к следующему запуску.">
         <NumberSetting
