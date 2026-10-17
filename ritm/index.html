@@ -1,9 +1,9 @@
 <!doctype html>
-<html lang="ru">
+<html lang="ru" data-design="aurora">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-    <meta name="theme-color" content="#f6f5f2" />
+    <meta name="theme-color" content="#06060d" />
     <meta name="description" content="Планировщик задач и недели. Работает без интернета." />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-title" content="Ритм" />
@@ -11,18 +11,21 @@
     <link rel="apple-touch-icon" href="./icons/apple-touch-icon.png" />
     <title>Ритм</title>
     <script>
-      // Тема до загрузки приложения, чтобы не мигал белый экран.
+      // Дизайн и тема до загрузки приложения, чтобы не мигало. Те же правила, что в src/designs/designs.ts.
       try {
+        var d = localStorage.getItem('ritm-design') || 'aurora'
         var t = localStorage.getItem('ritm-theme') || 'system'
-        if (t === 'dark' || (t === 'system' && matchMedia('(prefers-color-scheme: dark)').matches))
-          document.documentElement.classList.add('dark')
-      } catch (e) {}
+        var dark = d === 'aurora' || (d === 'mono' && (t === 'dark' || (t === 'system' && matchMedia('(prefers-color-scheme: dark)').matches)))
+        document.documentElement.dataset.design = d
+        if (dark) document.documentElement.classList.add('dark')
+      } catch (e) {
+        document.documentElement.dataset.design = 'aurora'
+        document.documentElement.classList.add('dark')
+      }
     </script>
-    <script type="module" crossorigin src="./assets/index-yniEKTjX.js"></script>
-    <link rel="modulepreload" crossorigin href="./assets/id-mF0cu-NQ.js">
-    <link rel="modulepreload" crossorigin href="./assets/tasks-Bd4AOBVo.js">
-    <link rel="modulepreload" crossorigin href="./assets/editorStore-CE8wQ4-A.js">
-    <link rel="stylesheet" crossorigin href="./assets/index-Ds0jy07Z.css">
+    <script type="module" crossorigin src="./assets/index-DTQCNpJq.js"></script>
+    <link rel="modulepreload" crossorigin href="./assets/id-Cj4bmsUM.js">
+    <link rel="stylesheet" crossorigin href="./assets/index-BqkL5WzU.css">
   <link rel="manifest" href="./manifest.webmanifest"></head>
   <body>
     <div id="root"></div>
