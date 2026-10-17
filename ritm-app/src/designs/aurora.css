@@ -37,100 +37,121 @@
   color-scheme: dark;
 }
 
-/* фон: размытые пятна сияния и звёзды */
-[data-design='aurora'] .ui-backdrop {
-  background:
-    radial-gradient(1px 1px at 12% 30%, #fff8, transparent), radial-gradient(1px 1px at 72% 12%, #fff6, transparent),
-    radial-gradient(1px 1px at 88% 64%, #fff5, transparent), radial-gradient(1px 1px at 33% 78%, #fff4, transparent),
-    radial-gradient(1.5px 1.5px at 55% 40%, #fff7, transparent), radial-gradient(40% 35% at 8% 0%, rgb(20 184 166 / 0.45), transparent 70%),
-    radial-gradient(40% 40% at 95% 5%, rgb(124 58 237 / 0.42), transparent 70%),
-    radial-gradient(45% 35% at 55% 105%, rgb(219 39 119 / 0.3), transparent 70%), var(--c-bg);
-}
+/* Стили действуют внутри [data-design='aurora'], но не внутри вложенного превью другого дизайна (настройки). */
+@scope ([data-design='aurora']) to ([data-design]:not([data-design='aurora'])) {
+  /* фон: размытые пятна сияния и звёзды */
+  .ui-backdrop {
+    background:
+      radial-gradient(1px 1px at 12% 30%, #fff8, transparent), radial-gradient(1px 1px at 72% 12%, #fff6, transparent),
+      radial-gradient(1px 1px at 88% 64%, #fff5, transparent), radial-gradient(1px 1px at 33% 78%, #fff4, transparent),
+      radial-gradient(1.5px 1.5px at 55% 40%, #fff7, transparent),
+      radial-gradient(40% 35% at 8% 0%, rgb(20 184 166 / 0.45), transparent 70%),
+      radial-gradient(40% 40% at 95% 5%, rgb(124 58 237 / 0.42), transparent 70%),
+      radial-gradient(45% 35% at 55% 105%, rgb(219 39 119 / 0.3), transparent 70%), var(--c-bg);
+  }
 
-[data-design='aurora'] .ui-sidebar {
-  background: rgb(255 255 255 / 0.04);
-  border-right: 1px solid rgb(255 255 255 / 0.08);
-  backdrop-filter: blur(24px);
-  -webkit-backdrop-filter: blur(24px);
-}
-[data-design='aurora'] .ui-nav-item[aria-current='page'] {
-  background: rgb(255 255 255 / 0.09);
-  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.12);
-}
-[data-design='aurora'] .ui-nav-item[aria-current='page'] svg {
-  stroke: url(#ui-grad);
-}
-[data-design='aurora'] .ui-header {
-  background: transparent;
-  border-bottom-color: transparent;
-}
-[data-design='aurora'] .ui-title {
-  font-weight: 600;
-}
+  .ui-sidebar {
+    background: rgb(255 255 255 / 0.04);
+    border-right: 1px solid rgb(255 255 255 / 0.08);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+  }
 
-[data-design='aurora'] .ui-check {
-  border-color: rgb(255 255 255 / 0.3);
-  width: 22px;
-  height: 22px;
-}
-[data-design='aurora'] .ui-check[data-priority='3'] {
-  border-color: transparent;
-  background:
-    linear-gradient(var(--c-bg), var(--c-bg)) padding-box,
-    conic-gradient(from 200deg, var(--grad-a), var(--grad-b), var(--grad-c), var(--grad-a)) border-box;
-}
-[data-design='aurora'] .ui-check[aria-checked='true'] {
-  background: var(--grad);
-  color: var(--c-on-accent);
-  box-shadow: 0 0 16px rgb(129 140 248 / 0.55);
-}
-[data-design='aurora'] .ui-task:hover {
-  background: rgb(255 255 255 / 0.05);
-}
-[data-design='aurora'] .ui-addtask-plus {
-  background: var(--grad);
-  color: var(--c-on-accent);
-  border-radius: 9px;
-  box-shadow: 0 6px 20px rgb(129 140 248 / 0.35);
-}
-[data-design='aurora'] .ui-btn[data-variant='primary'] {
-  box-shadow: 0 8px 26px rgb(129 140 248 / 0.35);
-}
-[data-design='aurora'] .ui-bottomnav {
-  background: rgb(17 17 30 / 0.7);
-  border-top-color: rgb(255 255 255 / 0.08);
-}
-[data-design='aurora'] .ui-tab[aria-current='page'] {
-  color: var(--c-text);
-}
-[data-design='aurora'] .ui-tab[aria-current='page'] svg {
-  stroke: url(#ui-grad);
-  filter: drop-shadow(0 0 8px rgb(129 140 248 / 0.7));
-}
-[data-design='aurora'] .ui-modal,
-[data-design='aurora'] .ui-drawer,
-[data-design='aurora'] .ui-sheet {
-  background: rgb(17 17 30 / 0.92);
-  backdrop-filter: blur(30px) saturate(140%);
-  -webkit-backdrop-filter: blur(30px) saturate(140%);
-  border: 1px solid rgb(255 255 255 / 0.08);
-}
-[data-design='aurora'] .ui-toast {
-  background: rgb(30 30 52 / 0.92);
-  color: var(--c-text);
-  border: 1px solid rgb(255 255 255 / 0.12);
-  backdrop-filter: blur(20px);
-}
-[data-design='aurora'] .ui-hero-title b,
-[data-design='aurora'] .ui-display.ui-grad-text {
-  background: var(--grad);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-}
-[data-design='aurora'] .ui-load-bar[data-today='true'] {
-  box-shadow: 0 0 18px rgb(129 140 248 / 0.45);
-}
-[data-design='aurora'] .ui-ring-bar {
-  filter: drop-shadow(0 0 10px rgb(129 140 248 / 0.6));
+  .ui-nav-item[aria-current='page'] {
+    background: rgb(255 255 255 / 0.09);
+    box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.12);
+  }
+
+  .ui-nav-item[aria-current='page'] svg {
+    stroke: url(#ui-grad);
+  }
+
+  .ui-header {
+    background: transparent;
+    border-bottom-color: transparent;
+  }
+
+  .ui-title {
+    font-weight: 600;
+  }
+
+  .ui-check {
+    border-color: rgb(255 255 255 / 0.3);
+    width: 22px;
+    height: 22px;
+  }
+
+  .ui-check[data-priority='3'] {
+    border-color: transparent;
+    background:
+      linear-gradient(var(--c-bg), var(--c-bg)) padding-box,
+      conic-gradient(from 200deg, var(--grad-a), var(--grad-b), var(--grad-c), var(--grad-a)) border-box;
+  }
+
+  .ui-check[aria-checked='true'] {
+    background: var(--grad);
+    color: var(--c-on-accent);
+    box-shadow: 0 0 16px rgb(129 140 248 / 0.55);
+  }
+
+  .ui-task:hover {
+    background: rgb(255 255 255 / 0.05);
+  }
+
+  .ui-addtask-plus {
+    background: var(--grad);
+    color: var(--c-on-accent);
+    border-radius: 9px;
+    box-shadow: 0 6px 20px rgb(129 140 248 / 0.35);
+  }
+
+  .ui-btn[data-variant='primary'] {
+    box-shadow: 0 8px 26px rgb(129 140 248 / 0.35);
+  }
+
+  .ui-bottomnav {
+    background: rgb(17 17 30 / 0.7);
+    border-top-color: rgb(255 255 255 / 0.08);
+  }
+
+  .ui-tab[aria-current='page'] {
+    color: var(--c-text);
+  }
+
+  .ui-tab[aria-current='page'] svg {
+    stroke: url(#ui-grad);
+    filter: drop-shadow(0 0 8px rgb(129 140 248 / 0.7));
+  }
+
+  .ui-modal,
+  .ui-drawer,
+  .ui-sheet {
+    background: rgb(17 17 30 / 0.92);
+    backdrop-filter: blur(30px) saturate(140%);
+    -webkit-backdrop-filter: blur(30px) saturate(140%);
+    border: 1px solid rgb(255 255 255 / 0.08);
+  }
+
+  .ui-toast {
+    background: rgb(30 30 52 / 0.92);
+    color: var(--c-text);
+    border: 1px solid rgb(255 255 255 / 0.12);
+    backdrop-filter: blur(20px);
+  }
+
+  .ui-hero-title b,
+  .ui-display.ui-grad-text {
+    background: var(--grad);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  .ui-load-bar[data-today='true'] {
+    box-shadow: 0 0 18px rgb(129 140 248 / 0.45);
+  }
+
+  .ui-ring-bar {
+    filter: drop-shadow(0 0 10px rgb(129 140 248 / 0.6));
+  }
 }

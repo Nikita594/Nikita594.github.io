@@ -35,6 +35,7 @@
   --display-style: normal;
   color-scheme: light;
 }
+
 [data-design='mono'].dark {
   --c-bg: #000000;
   --c-surface: #000000;
@@ -58,28 +59,36 @@
   color-scheme: dark;
 }
 
-/* никаких цветов: категории, привычки и блоки календаря — в оттенках серого */
-[data-design='mono'] .ui-dot,
-[data-design='mono'] .ui-block,
-[data-design='mono'] .ui-habit-cell,
-[data-design='mono'] .ui-color {
-  filter: grayscale(1);
-}
-[data-design='mono'] .ui-nav-item[aria-current='page'] {
-  background: var(--c-text);
-  color: var(--c-bg);
-}
-[data-design='mono'] .ui-tab[aria-current='page'] {
-  color: var(--c-text);
-  font-weight: 700;
-}
-[data-design='mono'] .ui-check[aria-checked='true'] {
-  background: var(--c-text);
-  color: var(--c-bg);
-}
-[data-design='mono'] .ui-hero-title b {
-  color: inherit;
-}
-[data-design='mono'] .ui-load-bar[data-today='true'] {
-  background: var(--c-text);
+/* Стили действуют внутри [data-design='mono'], но не внутри вложенного превью другого дизайна (настройки). */
+@scope ([data-design='mono']) to ([data-design]:not([data-design='mono'])) {
+  /* никаких цветов: категории, привычки и блоки календаря — в оттенках серого */
+  .ui-dot,
+  .ui-block,
+  .ui-habit-cell,
+  .ui-color {
+    filter: grayscale(1);
+  }
+
+  .ui-nav-item[aria-current='page'] {
+    background: var(--c-text);
+    color: var(--c-bg);
+  }
+
+  .ui-tab[aria-current='page'] {
+    color: var(--c-text);
+    font-weight: 700;
+  }
+
+  .ui-check[aria-checked='true'] {
+    background: var(--c-text);
+    color: var(--c-bg);
+  }
+
+  .ui-hero-title b {
+    color: inherit;
+  }
+
+  .ui-load-bar[data-today='true'] {
+    background: var(--c-text);
+  }
 }
