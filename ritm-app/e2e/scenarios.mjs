@@ -346,6 +346,8 @@ export const scenarios = {
     const clock = await page.getByTestId('clock').innerText()
     assert(clock === '15:00', 'через 10 минут осталось 15:00, а показано ' + clock)
     await page.getByRole('button', { name: 'Пауза' }).click()
+    // пауза сохраняется в базу не мгновенно: ждём, пока она применится, и только потом перематываем время
+    await page.getByRole('button', { name: 'Продолжить' }).waitFor()
     await page.clock.runFor('05:00')
     assert((await page.getByTestId('clock').innerText()) === '15:00', 'на паузе время стоит')
     await page.getByRole('button', { name: 'Продолжить' }).click()
@@ -480,6 +482,8 @@ export const scenarios = {
 
     // тёмная тема переживает перезагрузку без мигания (класс ставится до загрузки приложения)
     await page.goto(ctx.url + '#/settings')
+    // выбор темы есть только у дизайна «Монохром»
+    await page.getByRole('radio', { name: 'Монохром' }).click()
     await page.getByRole('radio', { name: 'Тёмная' }).click()
     await page.waitForFunction(() => document.documentElement.classList.contains('dark'))
     await page.reload({ waitUntil: 'domcontentloaded' })
@@ -533,6 +537,8 @@ export const scenarios = {
     await page.mouse.click(col.x + col.width / 2, col.y + (10 * 60 + 5 - 360) * 0.8)
     await page.getByRole('dialog', { name: 'Блок времени' }).getByRole('button', { name: 'Готово' }).click()
     await page.goto(ctx.url + '#/settings')
+    // выбор темы есть только у дизайна «Монохром»
+    await page.getByRole('radio', { name: 'Монохром' }).click()
     await page.getByRole('radio', { name: 'Тёмная' }).click()
     await page.waitForFunction(() => document.documentElement.classList.contains('dark'))
 
@@ -655,13 +661,24 @@ export const scenarios = {
     }
     await page.locator('[data-task-id]').nth(1).waitFor()
     const routes = ['today', 'next7', 'inbox', 'done', 'search?q=слова', 'week', 'timer', 'habits', 'matrix', 'settings']
-    for (const r of routes) {
-      await page.goto(ctx.url + '#/' + r)
-      await page.locator('h1').first().waitFor()
-      await page.waitForTimeout(150)
-      const overflow = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth)
-      assert(overflow <= 0, `${r}: шире экрана на ${overflow}px`)
-      await page.screenshot({ path: `${ctx.out}/375-${r.split('?')[0]}.png` })
+    // во всех четырёх дизайнах
+    for (const [design, id] of [
+      ['Северное сияние', 'aurora'],
+      ['Бумажный планер', 'paper'],
+      ['Пульс', 'pulse'],
+      ['Монохром', 'mono'],
+    ]) {
+      await page.goto(ctx.url + '#/settings')
+      await page.getByRole('radio', { name: design }).click()
+      await page.waitForFunction((id) => document.documentElement.dataset.design === id, id)
+      for (const r of routes) {
+        await page.goto(ctx.url + '#/' + r)
+        await page.locator('h1').first().waitFor()
+        await page.waitForTimeout(150)
+        const overflow = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth)
+        assert(overflow <= 0, `${design}, ${r}: шире экрана на ${overflow}px`)
+        await page.screenshot({ path: `${ctx.out}/375-${id}-${r.split('?')[0]}.png` })
+      }
     }
     // задача открывается на весь экран и закрывается
     await page.goto(ctx.url + '#/inbox')
@@ -759,6 +776,64 @@ export const scenarios = {
     assert((await dialog.getByLabel('День').inputValue()) === '2026-10-16', 'час начался вчера')
     await dialog.getByRole('button', { name: 'Добавить' }).click()
     await page.getByText('Добавлено 1 ч').waitFor()
+    await b.close()
+  },
+
+  async 'Дизайны: переключаются в настройках, не мигают после перезагрузки, превью не смешиваются'(ctx) {
+    const b = await ctx.browser('designs')
+    const page = await b.newPage()
+    const state = () =>
+      page.evaluate(() => ({
+        design: document.documentElement.dataset.design,
+        dark: document.documentElement.classList.contains('dark'),
+        meta: document.querySelector('meta[name="theme-color"]').content,
+      }))
+    await page.goto(ctx.url + '#/settings')
+    await page.getByRole('heading', { name: 'Настройки' }).waitFor()
+    let s = await state()
+    assert(s.design === 'aurora' && s.dark, 'по умолчанию — «Северное сияние», тёмный: ' + JSON.stringify(s))
+
+    for (const [name, id, dark] of [
+      ['Бумажный планер', 'paper', false],
+      ['Пульс', 'pulse', false],
+      ['Монохром', 'mono', false],
+      ['Северное сияние', 'aurora', true],
+    ]) {
+      await page.getByRole('radio', { name }).click()
+      await page.waitForFunction((id) => document.documentElement.dataset.design === id, id)
+      assert((await page.getByRole('radio', { name }).getAttribute('aria-checked')) === 'true', name + ': карточка отмечена')
+      // выбор темы есть только у «Монохрома»
+      assert((await page.getByRole('radiogroup', { name: 'Тема' }).count()) === (id === 'mono' ? 1 : 0), name + ': выбор темы')
+      // после перезагрузки дизайн стоит ещё до отрисовки приложения
+      await page.reload({ waitUntil: 'domcontentloaded' })
+      s = await state()
+      assert(s.design === id && s.dark === dark, `${name} сразу после перезагрузки: ` + JSON.stringify(s))
+      await page.getByRole('heading', { name: 'Настройки' }).waitFor()
+      await page.screenshot({ path: `${ctx.out}/design-${id}-settings.png` })
+    }
+
+    // «Монохром»: тёмная тема и обратно; другой дизайн тему не наследует
+    await page.getByRole('radio', { name: 'Монохром' }).click()
+    await page.getByRole('radio', { name: 'Тёмная' }).click()
+    await page.waitForFunction(() => document.documentElement.classList.contains('dark'))
+    assert((await state()).meta === '#000000', 'тёмный «Монохром»: цвет строки браузера чёрный')
+    await page.getByRole('radio', { name: 'Пульс' }).click()
+    await page.waitForFunction(() => !document.documentElement.classList.contains('dark'))
+
+    // превью каждого дизайна оформлено своим стилем, а не текущим («Пульс»)
+    const fonts = await page.evaluate(() =>
+      Object.fromEntries(
+        [...document.querySelectorAll('.ui-preview')].map((el) => [
+          el.dataset.design,
+          getComputedStyle(el.querySelector('.ui-hero-title')).fontFamily,
+        ]),
+      ),
+    )
+    assert(
+      /Unbounded/.test(fonts.aurora) && /Playfair/.test(fonts.paper) && !/Unbounded|Playfair/.test(fonts.mono),
+      'шрифты превью: ' + JSON.stringify(fonts),
+    )
+    assert(!b.errors.length, 'ошибки в консоли: ' + b.errors.join('; '))
     await b.close()
   },
 }

@@ -37,13 +37,13 @@ export function Toasts() {
         <div
           key={t.id}
           role="status"
-          className="pointer-events-auto flex max-w-md items-center gap-3 rounded-xl bg-text px-4 py-2.5 text-sm text-bg shadow-lg"
+          className="ui-toast pointer-events-auto flex max-w-md items-center gap-3 px-4 py-2.5 text-sm shadow-lg"
         >
           <span>{t.text}</span>
           {t.action && (
             <button
               type="button"
-              className="font-semibold text-accent-soft underline-offset-2 hover:underline"
+              className="font-semibold underline underline-offset-2"
               onClick={() => {
                 t.action!.run()
                 dismiss(t.id)

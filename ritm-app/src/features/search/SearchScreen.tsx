@@ -19,7 +19,7 @@ export function SearchScreen() {
 
   return (
     <Screen title="Поиск">
-      <div className="mb-3 flex items-center gap-2 rounded-xl border border-line bg-surface px-3 focus-within:border-accent">
+      <div className="ui-input mb-3 flex items-center gap-2 px-3 focus-within:border-accent">
         <Icon name="search" size={18} className="text-faint" />
         <input
           autoFocus

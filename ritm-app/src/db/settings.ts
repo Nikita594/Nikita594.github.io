@@ -1,10 +1,14 @@
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from './db'
+import type { DesignId } from '../designs/designs'
 
 export type ThemeSetting = 'system' | 'light' | 'dark'
 
 /** Все настройки и их значения по умолчанию. */
 export const DEFAULT_SETTINGS = {
+  /** Дизайн приложения (src/designs). */
+  design: 'aurora' as DesignId,
+  /** Светлая или тёмная — только для дизайнов, где это выбирается (Монохром). */
   theme: 'system' as ThemeSetting,
   /** Сколько часов в день можно запланировать без предупреждения (версия 2). */
   dailyLimitMin: 8 * 60,

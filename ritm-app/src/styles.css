@@ -1,4 +1,10 @@
 @import 'tailwindcss';
+@import './designs/fonts.css';
+@import './designs/base.css';
+@import './designs/aurora.css';
+@import './designs/paper.css';
+@import './designs/pulse.css';
+@import './designs/mono.css';
 
 @custom-variant dark (&:where(.dark, .dark *));
 
@@ -16,43 +22,46 @@
   --color-p1: var(--c-p1);
   --color-p2: var(--c-p2);
   --color-p3: var(--c-p3);
-  --font-sans: ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  --font-sans: var(--d-font-text);
+  --font-display: var(--d-font-display);
+  --font-num: var(--d-font-num);
+  --radius-card: var(--d-r-card);
+  --radius-ctl: var(--d-r-ctl);
 }
 
-:root {
-  --c-bg: #f6f5f2;
+/* Запасные значения (если data-design не задан). Настоящие цвета — в src/designs/*.css.
+   :where — нулевая специфичность, чтобы не перебивать дизайны. */
+:where(:root) {
+  --d-font-text: ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --d-font-display: var(--d-font-text);
+  --d-font-num: var(--d-font-text);
+  --d-r-card: 14px;
+  --d-r-ctl: 10px;
+  --d-r-check: 6px;
+  --c-bg: #ffffff;
   --c-surface: #ffffff;
-  --c-surface-2: #efeee9;
-  --c-text: #1d1c1a;
-  --c-muted: #5c5953;
-  /* бледный текст — всё равно не ниже 4.5:1 к фону (требование доступности) */
-  --c-faint: #74706a;
-  --c-line: #e4e2dc;
-  --c-accent: #0f766e;
-  --c-accent-soft: #d5ece8;
+  --c-surface-2: #f2f2f2;
+  --c-text: #000000;
+  --c-muted: #3d3d3d;
+  --c-faint: #6b6b6b;
+  --c-line: #e0e0e0;
+  --c-accent: #000000;
+  --c-accent-soft: #efefef;
   --c-on-accent: #ffffff;
-  /* приоритеты: низкий, средний, высокий */
   --c-p1: #0284c7;
   --c-p2: #d97706;
   --c-p3: #e11d48;
-  color-scheme: light;
-}
-
-.dark {
-  --c-bg: #121413;
-  --c-surface: #1a1d1c;
-  --c-surface-2: #242826;
-  --c-text: #ecebe7;
-  --c-muted: #b4b3ad;
-  --c-faint: #8c8d87;
-  --c-line: #2d3230;
-  --c-accent: #2fb5a5;
-  --c-accent-soft: #173a36;
-  --c-on-accent: #0b1513;
-  --c-p1: #38bdf8;
-  --c-p2: #fbbf24;
-  --c-p3: #fb7185;
-  color-scheme: dark;
+  --grad-a: #000000;
+  --grad-b: #000000;
+  --grad-c: #000000;
+  --grad: #000000;
+  --card-bg: var(--c-surface);
+  --card-border: 1px solid var(--c-line);
+  --card-shadow: none;
+  --card-blur: none;
+  --display-weight: 700;
+  --display-tracking: -0.01em;
+  --display-style: normal;
 }
 
 @layer base {

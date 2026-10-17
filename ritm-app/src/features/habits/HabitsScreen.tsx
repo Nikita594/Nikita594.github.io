@@ -1,55 +1,17 @@
 import { useLiveQuery } from 'dexie-react-hooks'
-import { useMemo, useState } from 'react'
+import { useState } from 'react'
 import { db } from '../../db/db'
-import { toggleCheck } from '../../db/habits'
-import type { DateStr, Habit, HabitCheck } from '../../db/types'
-import { addDays, formatDayLabel, fromDateStr, WEEKDAY_SHORT, weekdayOf } from '../../domain/dates'
-import { bestStreak, currentStreak, isScheduled } from '../../domain/habits'
+import type { DateStr, Habit } from '../../db/types'
+import { addDays, fromDateStr, WEEKDAY_SHORT, weekdayOf } from '../../domain/dates'
+import { bestStreak, currentStreak } from '../../domain/habits'
 import { days as daysText } from '../../domain/text'
 import { useMediaQuery } from '../../lib/useMediaQuery'
 import { useToday } from '../../lib/useToday'
-import { Icon } from '../../ui/icons'
 import { Button, cx, Empty } from '../../ui/kit'
 import { Screen } from '../../ui/Screen'
 import { Section } from '../tasks/TaskList'
+import { CheckCell, useHabitChecks } from './HabitCells'
 import { HabitEditor } from './HabitEditor'
-
-/** Отметки по привычкам: habitId → множество дат. */
-export function useHabitChecks(): Map<string, Set<DateStr>> | undefined {
-  const checks = useLiveQuery(() => db.habitChecks.toArray(), [])
-  return useMemo(() => {
-    if (!checks) return undefined
-    const map = new Map<string, Set<DateStr>>()
-    for (const c of checks as HabitCheck[]) {
-      if (!map.has(c.habitId)) map.set(c.habitId, new Set())
-      map.get(c.habitId)!.add(c.date)
-    }
-    return map
-  }, [checks])
-}
-
-export function CheckCell({ habit, date, checked, size = 32 }: { habit: Habit; date: DateStr; checked: boolean; size?: number }) {
-  const scheduled = isScheduled(habit, date)
-  return (
-    <button
-      type="button"
-      aria-pressed={checked}
-      aria-label={`${habit.name}, ${formatDayLabel(date)}${checked ? ': отмечено' : scheduled ? '' : ': по расписанию не нужно'}`}
-      onClick={() => void toggleCheck(habit.id, date)}
-      className={cx(
-        'flex shrink-0 items-center justify-center rounded-full transition-colors',
-        checked ? 'text-white' : scheduled ? 'border-2 border-line hover:border-faint' : 'text-faint hover:bg-surface-2',
-      )}
-      style={{ width: size, height: size, background: checked ? habit.color : undefined }}
-    >
-      {checked ? (
-        <Icon name="check" size={size * 0.5} strokeWidth={3} />
-      ) : (
-        !scheduled && <span className="h-1 w-1 rounded-full bg-current" />
-      )}
-    </button>
-  )
-}
 
 export function HabitsScreen() {
   const today = useToday()
@@ -72,7 +34,7 @@ export function HabitsScreen() {
       <div key={h.id} className="flex items-center gap-2 border-b border-line py-2 last:border-0" data-habit={h.name}>
         <button type="button" onClick={() => setEditing(h)} className="min-w-0 flex-1 rounded-lg px-2 py-1 text-left hover:bg-surface-2">
           <div className="flex items-center gap-2 truncate text-sm font-medium">
-            <span className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ background: h.color }} />
+            <span className="ui-color h-2.5 w-2.5 shrink-0 rounded-full" style={{ background: h.color }} />
             <span className="truncate">{h.name}</span>
           </div>
           <div className="mt-0.5 truncate text-xs text-muted">
@@ -109,7 +71,7 @@ export function HabitsScreen() {
         </Empty>
       )}
       {active.length > 0 && (
-        <div className="rounded-2xl border border-line bg-surface px-2 py-1">
+        <div className="ui-card px-2 py-1">
           <div className="flex items-end gap-2 border-b border-line pt-1 pb-2">
             <div className="flex-1" />
             <div className={cx('flex', wide ? 'gap-1' : 'gap-0.5')}>
@@ -133,7 +95,7 @@ export function HabitsScreen() {
       )}
       {archived.length > 0 && (
         <Section title="В архиве" count={archived.length} defaultOpen={false}>
-          <div className="rounded-2xl border border-line bg-surface px-2 py-1 opacity-70">{archived.map(row)}</div>
+          <div className="ui-card px-2 py-1 opacity-70">{archived.map(row)}</div>
         </Section>
       )}
       {editing && (

@@ -112,7 +112,7 @@ function SubtaskTitle({ taskId, subId, title, done }: { taskId: string; subId: s
   )
 }
 
-const selectCls = 'h-8 min-w-0 rounded-lg border border-line bg-surface px-2 text-sm outline-none focus:border-accent'
+const selectCls = 'ui-input h-8 min-w-0 px-2 text-sm outline-none'
 
 function TaskEditor({ task }: { task: Task }) {
   const lists = useLists()

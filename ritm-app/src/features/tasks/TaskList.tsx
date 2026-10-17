@@ -40,12 +40,12 @@ export function Section({
 }) {
   const [open, setOpen] = useState(defaultOpen)
   return (
-    <section className="mt-3 first:mt-0">
+    <section className="ui-section mt-3 first:mt-0">
       <div className="flex items-center gap-2 px-2">
         <button
           type="button"
           onClick={() => setOpen(!open)}
-          className="flex flex-1 items-center gap-1.5 py-1.5 text-left text-xs font-semibold tracking-wide text-muted uppercase"
+          className="ui-section-title flex flex-1 items-center gap-1.5 py-1.5 text-left text-xs font-semibold tracking-wide uppercase"
           aria-expanded={open}
         >
           <Icon name="chevronDown" size={14} className={cx('transition-transform', !open && '-rotate-90')} />

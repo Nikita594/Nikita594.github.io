@@ -5,7 +5,7 @@ import { ALL_WEEKDAYS, firstOccurrence } from '../../domain/repeat'
 import { Icon } from '../../ui/icons'
 import { cx, DraftInput, inRange, isFullDate } from '../../ui/kit'
 
-const ctl = 'h-8 rounded-lg border border-line bg-surface px-2 text-sm outline-none focus:border-accent'
+const ctl = 'ui-input h-8 px-2 text-sm outline-none'
 
 /** Правило по умолчанию для выбранного вида повтора. */
 function defaultRule(kind: Repeat['kind'], task: Task): Repeat {

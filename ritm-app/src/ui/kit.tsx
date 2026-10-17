@@ -7,11 +7,12 @@ export function cx(...parts: (string | false | null | undefined)[]) {
 
 type Variant = 'primary' | 'ghost' | 'soft' | 'danger'
 
+// Цвета кнопок задают дизайны через крючок ui-btn[data-variant] (src/designs).
 const variants: Record<Variant, string> = {
-  primary: 'bg-accent text-on-accent hover:opacity-90',
-  soft: 'bg-surface-2 text-text hover:bg-line',
-  ghost: 'text-muted hover:bg-surface-2 hover:text-text',
-  danger: 'text-p3 hover:bg-surface-2',
+  primary: 'hover:opacity-90',
+  soft: '',
+  ghost: '',
+  danger: '',
 }
 
 export function Button({
@@ -24,8 +25,9 @@ export function Button({
   return (
     <button
       type="button"
+      data-variant={variant}
       className={cx(
-        'inline-flex h-9 items-center justify-center gap-1.5 rounded-lg px-3 text-sm font-medium transition-colors disabled:opacity-40',
+        'ui-btn inline-flex h-9 items-center justify-center gap-1.5 px-3 text-sm font-medium transition-colors disabled:opacity-40',
         variants[variant],
         className,
       )}
@@ -49,10 +51,7 @@ export function IconButton({
       type="button"
       aria-label={label}
       title={label}
-      className={cx(
-        'inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-muted transition-colors hover:bg-surface-2 hover:text-text',
-        className,
-      )}
+      className={cx('ui-iconbtn inline-flex h-9 w-9 shrink-0 items-center justify-center transition-colors', className)}
       {...rest}
     >
       <Icon name={icon} size={size} />
@@ -101,15 +100,12 @@ export function Modal({
 }) {
   useEscape(onClose)
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 sm:items-center sm:p-4" onMouseDown={onClose}>
+    <div className="ui-overlay fixed inset-0 z-50 flex items-end justify-center sm:items-center sm:p-4" onMouseDown={onClose}>
       <div
         role="dialog"
         aria-modal="true"
         aria-label={title}
-        className={cx(
-          'flex max-h-[92dvh] w-full flex-col rounded-t-2xl bg-surface shadow-xl sm:rounded-2xl',
-          wide ? 'sm:max-w-2xl' : 'sm:max-w-md',
-        )}
+        className={cx('ui-modal flex max-h-[92dvh] w-full flex-col shadow-xl', wide ? 'sm:max-w-2xl' : 'sm:max-w-md')}
         onMouseDown={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between gap-2 px-5 pt-4 pb-2">
@@ -118,7 +114,7 @@ export function Modal({
         </div>
         <div className="min-h-0 flex-1 overflow-y-auto px-5 pb-4">{children}</div>
         {footer && (
-          <div className="flex justify-end gap-2 border-t border-line px-5 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
+          <div className="flex justify-end gap-2 border-t border-line/70 px-5 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
             {footer}
           </div>
         )}
@@ -131,11 +127,11 @@ export function Modal({
 export function Drawer({ onClose, children, label }: { onClose: () => void; children: ReactNode; label: string }) {
   useEscape(onClose)
   return (
-    <div className="fixed inset-0 z-40 flex justify-end bg-black/30" onMouseDown={onClose}>
+    <div className="ui-overlay fixed inset-0 z-40 flex justify-end" onMouseDown={onClose}>
       <aside
         role="dialog"
         aria-label={label}
-        className="flex h-full w-full flex-col bg-surface shadow-xl sm:max-w-md"
+        className="ui-drawer flex h-full w-full flex-col shadow-xl sm:max-w-md"
         onMouseDown={(e) => e.stopPropagation()}
       >
         {children}
@@ -146,7 +142,7 @@ export function Drawer({ onClose, children, label }: { onClose: () => void; chil
 
 export function Empty({ title, children }: { title: string; children?: ReactNode }) {
   return (
-    <div className="mx-auto max-w-sm px-6 py-16 text-center">
+    <div className="ui-empty mx-auto max-w-sm px-6 py-16 text-center">
       <p className="font-medium">{title}</p>
       {children && <div className="mt-1 text-sm text-muted">{children}</div>}
     </div>
@@ -163,11 +159,12 @@ export function Field({ label, children, hint }: { label: string; children: Reac
   )
 }
 
-export const inputCls =
-  'h-9 w-full rounded-lg border border-line bg-surface px-3 text-sm outline-none placeholder:text-faint focus:border-accent'
+export const inputCls = 'ui-input h-9 w-full px-3 text-sm outline-none placeholder:text-faint'
 
-export function ColorDot({ color, size = 10 }: { color: string; size?: number }) {
-  return <span className="inline-block shrink-0 rounded-full" style={{ background: color, width: size, height: size }} />
+export function ColorDot({ color, size = 10, className }: { color: string; size?: number; className?: string }) {
+  return (
+    <span className={cx('ui-dot inline-block shrink-0 rounded-full', className)} style={{ background: color, width: size, height: size }} />
+  )
 }
 
 export const PALETTE = ['#0f766e', '#2563eb', '#7c3aed', '#db2777', '#dc2626', '#ea580c', '#ca8a04', '#16a34a', '#0891b2', '#64748b']

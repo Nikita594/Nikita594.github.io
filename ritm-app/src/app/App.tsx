@@ -4,9 +4,10 @@ import { db } from '../db/db'
 import type { ThemeSetting } from '../db/settings'
 import { href, useRoute, type Route } from '../lib/router'
 import { registerServiceWorker, requestPersistentStorage } from '../lib/sw'
-import { useApplyTheme } from '../lib/theme'
+import { useApplyDesign } from '../lib/theme'
+import type { DesignId } from '../designs/designs'
 import { Icon } from '../ui/icons'
-import { cx, Empty } from '../ui/kit'
+import { Empty } from '../ui/kit'
 import { Screen } from '../ui/Screen'
 import { toast, Toasts } from '../ui/toast'
 import { BOTTOM_NAV, TASK_VIEWS, TOOLS } from './nav'
@@ -71,11 +72,18 @@ function renderScreen(route: Route): ReactNode {
 
 export function App() {
   const route = useRoute()
-  // null, пока не прочитали из базы (иначе на миг применилась бы тема по умолчанию)
-  const theme = useLiveQuery(async () => ((await db.settings.get('theme'))?.value as ThemeSetting | undefined) ?? 'system', [], null)
+  // null, пока не прочитали из базы (иначе на миг применились бы дизайн и тема по умолчанию)
+  const look = useLiveQuery(
+    async () => ({
+      design: ((await db.settings.get('design'))?.value as DesignId | undefined) ?? 'aurora',
+      theme: ((await db.settings.get('theme'))?.value as ThemeSetting | undefined) ?? 'system',
+    }),
+    [],
+    null,
+  )
   const [menuOpen, setMenuOpen] = useState(false)
   const timerLabel = useTimerLabel()
-  useApplyTheme(theme)
+  useApplyDesign(look?.design ?? null, look?.theme ?? null)
 
   useEffect(() => {
     registerServiceWorker(() => toast('Приложение обновилось', { label: 'Перезагрузить', run: () => location.reload() }, 15000))
@@ -90,8 +98,20 @@ export function App() {
 
   return (
     // в альбомной ориентации iPhone не залезаем под вырез экрана
-    <div className="flex h-full pr-[env(safe-area-inset-right)] pl-[env(safe-area-inset-left)]">
-      <aside className="hidden w-60 shrink-0 border-r border-line bg-surface md:block">
+    <div className="ui-app flex h-full pr-[env(safe-area-inset-right)] pl-[env(safe-area-inset-left)]">
+      {/* декоративный фон дизайна (сияние, бумага…) */}
+      <div className="ui-backdrop" aria-hidden="true" />
+      {/* градиент дизайна для SVG: stroke="url(#ui-grad)" */}
+      <svg width="0" height="0" className="absolute" aria-hidden="true">
+        <defs>
+          <linearGradient id="ui-grad" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0" style={{ stopColor: 'var(--grad-a)' }} />
+            <stop offset="0.5" style={{ stopColor: 'var(--grad-b)' }} />
+            <stop offset="1" style={{ stopColor: 'var(--grad-c)' }} />
+          </linearGradient>
+        </defs>
+      </svg>
+      <aside className="ui-sidebar hidden w-60 shrink-0 md:block">
         <Sidebar onAddList={addList} />
       </aside>
 
@@ -100,18 +120,13 @@ export function App() {
       </main>
 
       {/* Нижняя панель на телефоне */}
-      <nav
-        className="fixed inset-x-0 bottom-0 z-30 flex border-t border-line bg-surface/95 backdrop-blur pb-safe md:hidden"
-        aria-label="Быстрые разделы"
-      >
+      <nav className="ui-bottomnav fixed inset-x-0 bottom-0 z-30 flex pb-safe md:hidden" aria-label="Быстрые разделы">
         {BOTTOM_NAV.map((n) => (
           <a
             key={n.route}
             href={href(n.route)}
-            className={cx(
-              'flex flex-1 flex-col items-center gap-0.5 py-2 text-[11px]',
-              route.name === n.route ? 'text-accent' : 'text-muted',
-            )}
+            aria-current={route.name === n.route ? 'page' : undefined}
+            className="ui-tab flex flex-1 flex-col items-center gap-0.5 py-2 text-[11px]"
           >
             <Icon name={n.icon} size={22} />
             <span className="tabular-nums">{n.route === 'timer' && timerLabel ? timerLabel : n.label}</span>
@@ -120,7 +135,7 @@ export function App() {
         <button
           type="button"
           onClick={() => setMenuOpen(true)}
-          className="flex flex-1 flex-col items-center gap-0.5 py-2 text-[11px] text-muted"
+          className="ui-tab flex flex-1 flex-col items-center gap-0.5 py-2 text-[11px]"
         >
           <Icon name="menu" size={22} />
           Ещё
@@ -128,8 +143,8 @@ export function App() {
       </nav>
 
       {menuOpen && (
-        <div className="fixed inset-0 z-40 bg-black/40 md:hidden" onClick={() => setMenuOpen(false)}>
-          <div className="h-full w-72 max-w-[85%] bg-surface shadow-xl" onClick={(e) => e.stopPropagation()}>
+        <div className="ui-overlay fixed inset-0 z-40 md:hidden" onClick={() => setMenuOpen(false)}>
+          <div className="ui-sheet h-full w-72 max-w-[85%] shadow-xl" onClick={(e) => e.stopPropagation()}>
             <Sidebar onNavigate={() => setMenuOpen(false)} onAddList={addList} />
           </div>
         </div>

@@ -1,0 +1,325 @@
+/*
+  Общая основа дизайнов.
+
+  Компоненты помечены «крючками» — классами ui-*. Здесь их вид по умолчанию, собранный из переменных
+  (токенов). Каждый дизайн (aurora.css, paper.css, pulse.css, mono.css) задаёт свои токены на
+  [data-design='…'] и переопределяет крючки внутри @scope ([data-design='…']) to ([data-design]:not([data-design='…'])),
+  чтобы стили не протекали в превью других дизайнов в настройках. Файлы дизайнов не в @layer — они сильнее утилит Tailwind.
+
+  Крючки:
+    ui-app, ui-backdrop                 корень приложения и декоративный фон под ним
+    ui-sidebar, ui-brand, ui-nav-item, ui-nav-label, ui-search   боковое меню ([aria-current=page] — активный пункт)
+    ui-bottomnav, ui-tab                нижняя панель телефона
+    ui-sheet                            выезжающее меню на телефоне
+    ui-header, ui-title, ui-subtitle    заголовок экрана
+    ui-logo                             значок «Ритм» (цвета — --logo-bg, --logo-fg)
+    ui-card                             карточка-поверхность (настройки, привычки); ui-timer, ui-quadrant, ui-banner — её разновидности
+    ui-panel                            боковая панель задач в календаре
+    ui-section, ui-section-title        раздел списка задач
+    ui-task, ui-task-title, ui-task-meta, ui-chip   строка задачи ([data-done], [data-priority=0..3])
+    ui-check                            галочка задачи ([aria-checked], [data-priority])
+    ui-addtask, ui-addtask-plus         строка быстрого ввода
+    ui-btn ([data-variant=primary|soft|ghost|danger]), ui-iconbtn, ui-input
+    ui-overlay, ui-modal, ui-drawer, ui-toast, ui-empty
+    ui-display                          крупные цифры и даты
+    ui-hero, ui-hero-date, ui-hero-title, ui-hero-sum, ui-load, ui-load-bar   шапка экрана «Сегодня»
+    ui-widget ([data-kind=focus|habits])  виджеты справа на «Сегодня»
+    ui-ring-track, ui-ring-bar ([data-phase=focus|break])   кольцо таймера
+    ui-habit-cell ([data-state=done|todo|off])
+    ui-week, ui-week-head, ui-week-day ([data-today]), ui-block   календарь недели
+    ui-dot, ui-color                    цветные метки категорий, списков, привычек (цвет задан в style)
+  Градиент для SVG: stroke="url(#ui-grad)" (цвета — --grad-a, --grad-b, --grad-c).
+*/
+
+@layer components {
+  .ui-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    background: var(--c-bg);
+  }
+
+  .ui-preview {
+    background: var(--preview-bg, var(--c-bg));
+    font-family: var(--d-font-text);
+    color: var(--c-text);
+  }
+
+  .ui-sidebar {
+    background: var(--c-surface);
+    border-right: 1px solid var(--c-line);
+  }
+  .ui-brand {
+    font-family: var(--d-font-display);
+  }
+  .ui-nav-item {
+    color: var(--c-muted);
+    border-radius: var(--d-r-ctl);
+  }
+  .ui-nav-item:hover {
+    background: var(--c-surface-2);
+    color: var(--c-text);
+  }
+  .ui-nav-item[aria-current='page'] {
+    background: var(--c-accent-soft);
+    color: var(--c-text);
+    font-weight: 600;
+  }
+  .ui-nav-label {
+    color: var(--c-faint);
+  }
+  .ui-search {
+    border: 1px solid var(--c-line);
+    border-radius: var(--d-r-ctl);
+    color: var(--c-faint);
+  }
+
+  .ui-bottomnav {
+    background: color-mix(in srgb, var(--c-surface) 94%, transparent);
+    border-top: 1px solid var(--c-line);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+  }
+  .ui-tab {
+    color: var(--c-muted);
+  }
+  .ui-tab[aria-current='page'] {
+    color: var(--c-accent);
+  }
+  .ui-sheet {
+    background: var(--c-surface);
+  }
+
+  .ui-header {
+    background: color-mix(in srgb, var(--c-bg) 90%, transparent);
+    border-bottom: 1px solid var(--c-line);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+  }
+  .ui-title {
+    font-family: var(--d-font-display);
+    font-weight: var(--display-weight);
+    letter-spacing: var(--display-tracking);
+    font-style: var(--display-style);
+  }
+  .ui-subtitle {
+    color: var(--c-muted);
+  }
+
+  .ui-card {
+    background: var(--card-bg);
+    border: var(--card-border);
+    border-radius: var(--d-r-card);
+    box-shadow: var(--card-shadow);
+    backdrop-filter: var(--card-blur);
+    -webkit-backdrop-filter: var(--card-blur);
+  }
+
+  .ui-section-title {
+    color: var(--c-muted);
+  }
+
+  .ui-task {
+    border-radius: var(--d-r-ctl);
+  }
+  .ui-task:hover {
+    background: var(--c-surface-2);
+  }
+  .ui-task[data-done='true'] .ui-task-title {
+    color: var(--c-faint);
+    text-decoration: line-through;
+  }
+  .ui-task-meta {
+    color: var(--c-muted);
+  }
+  .ui-chip {
+    color: var(--c-muted);
+  }
+
+  .ui-check {
+    width: 20px;
+    height: 20px;
+    border-radius: var(--d-r-check);
+    border: 2px solid var(--c-faint);
+    color: var(--c-on-accent);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    transition:
+      background-color 0.15s,
+      border-color 0.15s,
+      transform 0.15s;
+  }
+  .ui-check[data-priority='1'] {
+    border-color: var(--c-p1);
+  }
+  .ui-check[data-priority='2'] {
+    border-color: var(--c-p2);
+  }
+  .ui-check[data-priority='3'] {
+    border-color: var(--c-p3);
+  }
+  .ui-check[aria-checked='true'] {
+    border-color: transparent;
+    background: var(--c-faint);
+  }
+  .ui-check:active {
+    transform: scale(0.88);
+  }
+
+  .ui-addtask {
+    background: var(--card-bg);
+    border: var(--card-border);
+    border-radius: var(--d-r-card);
+    box-shadow: var(--card-shadow);
+    backdrop-filter: var(--card-blur);
+    -webkit-backdrop-filter: var(--card-blur);
+  }
+  .ui-addtask:focus-within {
+    border-color: var(--c-accent);
+  }
+  .ui-addtask-plus {
+    color: var(--c-accent);
+  }
+
+  .ui-btn {
+    border-radius: var(--d-r-ctl);
+  }
+  .ui-btn[data-variant='primary'] {
+    background: var(--grad);
+    color: var(--c-on-accent);
+  }
+  .ui-btn[data-variant='soft'] {
+    background: var(--c-surface-2);
+    color: var(--c-text);
+  }
+  .ui-btn[data-variant='ghost'] {
+    color: var(--c-muted);
+  }
+  .ui-btn[data-variant='ghost']:hover,
+  .ui-btn[data-variant='soft']:hover {
+    background: var(--c-line);
+    color: var(--c-text);
+  }
+  .ui-btn[data-variant='danger'] {
+    color: var(--c-p3);
+  }
+  .ui-iconbtn {
+    border-radius: var(--d-r-ctl);
+    color: var(--c-muted);
+  }
+  .ui-iconbtn:hover {
+    background: var(--c-surface-2);
+    color: var(--c-text);
+  }
+  .ui-input {
+    background: var(--c-surface);
+    border: 1px solid var(--c-line);
+    border-radius: var(--d-r-ctl);
+  }
+  .ui-input:focus {
+    border-color: var(--c-accent);
+  }
+
+  .ui-overlay {
+    background: rgb(0 0 0 / 0.45);
+  }
+  .ui-modal,
+  .ui-drawer {
+    background: var(--c-surface);
+    color: var(--c-text);
+  }
+  .ui-modal {
+    border-radius: var(--d-r-card) var(--d-r-card) 0 0;
+  }
+  @media (min-width: 640px) {
+    .ui-modal {
+      border-radius: var(--d-r-card);
+    }
+  }
+  .ui-toast {
+    background: var(--c-text);
+    color: var(--c-bg);
+    border-radius: var(--d-r-ctl);
+  }
+
+  .ui-display {
+    font-family: var(--d-font-display);
+    font-weight: var(--display-weight);
+    letter-spacing: var(--display-tracking);
+    font-style: var(--display-style);
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* «Сегодня» */
+  .ui-hero {
+    background: var(--card-bg);
+    border: var(--card-border);
+    border-radius: var(--d-r-card);
+    box-shadow: var(--card-shadow);
+    backdrop-filter: var(--card-blur);
+    -webkit-backdrop-filter: var(--card-blur);
+  }
+  .ui-hero-date {
+    color: var(--c-muted);
+  }
+  .ui-hero-title {
+    font-family: var(--d-font-display);
+    font-weight: var(--display-weight);
+    letter-spacing: var(--display-tracking);
+    font-style: var(--display-style);
+  }
+  .ui-hero-title b {
+    color: var(--c-accent);
+    font-weight: inherit;
+  }
+  .ui-hero-sum {
+    color: var(--c-muted);
+  }
+  .ui-load-bar {
+    background: var(--c-line);
+  }
+  .ui-load-bar[data-today='true'] {
+    background: var(--grad);
+  }
+
+  .ui-widget {
+    background: var(--card-bg);
+    border: var(--card-border);
+    border-radius: var(--d-r-card);
+    box-shadow: var(--card-shadow);
+    backdrop-filter: var(--card-blur);
+    -webkit-backdrop-filter: var(--card-blur);
+  }
+
+  .ui-ring-track {
+    stroke: var(--c-line);
+  }
+  .ui-ring-bar {
+    stroke: url(#ui-grad);
+  }
+  .ui-ring-bar[data-phase='break'] {
+    stroke: var(--c-p1);
+  }
+
+  .ui-panel {
+    background: var(--c-surface);
+  }
+  .ui-week-head {
+    background: color-mix(in srgb, var(--c-bg) 92%, transparent);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+  }
+  .ui-week-day[data-today='true'] {
+    background-color: color-mix(in srgb, var(--c-accent-soft) 30%, transparent);
+  }
+
+  .ui-habit-cell[data-state='todo'] {
+    border: 2px solid var(--c-line);
+  }
+  .ui-habit-cell[data-state='off'] {
+    color: var(--c-faint);
+  }
+}

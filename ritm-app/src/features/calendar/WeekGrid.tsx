@@ -286,9 +286,9 @@ export function WeekGrid({
   const nowMin = minutesNow(now)
 
   return (
-    <div ref={scrollRef} className="relative min-h-0 flex-1 overflow-auto select-none" data-week-grid>
+    <div ref={scrollRef} className="ui-week relative min-h-0 flex-1 overflow-auto select-none" data-week-grid>
       {/* Заголовки дней */}
-      <div className="sticky top-0 z-20 flex border-b border-line bg-bg/95 backdrop-blur">
+      <div className="ui-week-head sticky top-0 z-20 flex border-b border-line">
         <div className="w-12 shrink-0" />
         {days.map((d) => {
           const planned = totalMinutes(shown.filter((b) => b.date === d))
@@ -341,11 +341,8 @@ export function WeekGrid({
               data-date={date}
               onPointerDown={onColumnDown(date)}
               onClick={onColumnClick(date)}
-              className={cx(
-                'relative min-w-0 flex-1 border-l border-line',
-                placing ? 'cursor-copy' : 'cursor-crosshair',
-                date === today && 'bg-accent-soft/30',
-              )}
+              className={cx('ui-week-day relative min-w-0 flex-1 border-l border-line', placing ? 'cursor-copy' : 'cursor-crosshair')}
+              data-today={date === today}
               style={{
                 backgroundImage: `repeating-linear-gradient(to bottom, var(--c-line) 0, var(--c-line) 1px, transparent 1px, transparent ${HOUR_PX}px)`,
               }}
@@ -372,7 +369,7 @@ export function WeekGrid({
                     }}
                     onKeyDown={(e) => e.key === 'Enter' && onOpenBlock(b)}
                     className={cx(
-                      'group absolute overflow-hidden rounded-md border-l-[3px] px-1.5 text-xs leading-tight',
+                      'ui-block group absolute overflow-hidden rounded-md border-l-[3px] px-1.5 text-xs leading-tight',
                       active ? 'z-10 shadow-lg' : 'cursor-grab',
                       task?.status === 'done' && 'opacity-60',
                     )}

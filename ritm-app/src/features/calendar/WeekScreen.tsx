@@ -125,7 +125,7 @@ export function WeekScreen() {
             onOpenBlock={(b) => setOpenBlock(b.id)}
           />
           {wide && panelOpen && (
-            <aside className="w-64 shrink-0 border-l border-line bg-surface">
+            <aside className="ui-panel w-64 shrink-0 border-l border-line">
               <TaskPanel tasks={panelTasks} onPick={pick} picked={placing} today={today} />
             </aside>
           )}
@@ -134,7 +134,7 @@ export function WeekScreen() {
 
       {!wide && sheetOpen && (
         <div className="fixed inset-0 z-40 flex items-end bg-black/40" onClick={() => setSheetOpen(false)}>
-          <div className="h-[70dvh] w-full rounded-t-2xl bg-surface pb-safe" onClick={(e) => e.stopPropagation()}>
+          <div className="ui-sheet h-[70dvh] w-full rounded-t-2xl pb-safe" onClick={(e) => e.stopPropagation()}>
             <TaskPanel tasks={panelTasks} onPick={pick} picked={placing} today={today} />
           </div>
         </div>

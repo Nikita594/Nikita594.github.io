@@ -1,0 +1,1 @@
+import{K as e,W as t}from"./id-Cj4bmsUM.js";var n=e(t(),1);function r(e){return(0,n.useSyncExternalStore)(t=>{let n=matchMedia(e);return n.addEventListener(`change`,t),()=>n.removeEventListener(`change`,t)},()=>matchMedia(e).matches)}var i=()=>r(`(min-width: 768px)`);export{r as n,i as t};

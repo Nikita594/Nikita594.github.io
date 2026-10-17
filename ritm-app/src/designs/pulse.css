@@ -1,0 +1,173 @@
+/* Пульс: яркие плитки, чёрный, лайм и фиолетовый, крупные цифры. */
+
+[data-design='pulse'] {
+  --c-bg: #eceef2;
+  --c-surface: #ffffff;
+  --c-surface-2: #f3f4f8;
+  --c-text: #0f1014;
+  --c-muted: #4b4f5c;
+  --c-faint: #646979;
+  --c-line: #e3e5eb;
+  --c-accent: #6b5cff;
+  --c-accent-soft: #e9e6ff;
+  --c-on-accent: #ffffff;
+  --c-p1: #0ea5e9;
+  --c-p2: #f59e0b;
+  --c-p3: #ff4f93;
+  --grad-a: #6b5cff;
+  --grad-b: #6b5cff;
+  --grad-c: #6b5cff;
+  --grad: #6b5cff;
+  --lime: #c6f36b;
+  --d-font-text: 'Onest Variable', system-ui, sans-serif;
+  --d-font-display: 'Unbounded Variable', 'Onest Variable', system-ui, sans-serif;
+  --d-font-num: 'Unbounded Variable', system-ui, sans-serif;
+  --d-r-card: 28px;
+  --d-r-ctl: 16px;
+  --d-r-check: 9px;
+  --card-bg: #ffffff;
+  --card-border: 0 solid transparent;
+  --card-shadow: 0 1px 0 rgb(0 0 0 / 0.04);
+  --card-blur: none;
+  --display-weight: 800;
+  --display-tracking: -0.03em;
+  --display-style: normal;
+  color-scheme: light;
+}
+
+/* Стили действуют внутри [data-design='pulse'], но не внутри вложенного превью другого дизайна (настройки). */
+@scope ([data-design='pulse']) to ([data-design]:not([data-design='pulse'])) {
+  .ui-sidebar {
+    background: transparent;
+    border-right: none;
+  }
+
+  .ui-nav-item {
+    font-weight: 600;
+  }
+
+  .ui-nav-item[aria-current='page'] {
+    background: var(--c-text);
+    color: var(--lime);
+  }
+
+  .ui-header {
+    background: transparent;
+    border-bottom-color: transparent;
+  }
+
+  .ui-title {
+    font-size: 1.6rem;
+  }
+
+  .ui-section-title {
+    font-weight: 800;
+  }
+
+  .ui-task {
+    background: var(--c-surface);
+    margin-bottom: 8px;
+  }
+
+  .ui-task:hover {
+    background: #f7f8fb;
+  }
+
+  .ui-check {
+    border-width: 2.5px;
+    border-color: #c9ccd6;
+    width: 24px;
+    height: 24px;
+  }
+
+  .ui-check[aria-checked='true'] {
+    background: var(--c-text);
+    color: var(--lime);
+  }
+
+  .ui-addtask {
+    border-radius: 999px;
+  }
+
+  .ui-addtask-plus {
+    background: var(--c-accent);
+    color: #fff;
+    border-radius: 999px;
+  }
+
+  .ui-btn {
+    font-weight: 700;
+  }
+
+  .ui-btn[data-variant='primary'] {
+    background: var(--c-text);
+    color: var(--lime);
+    border-radius: 999px;
+  }
+
+  .ui-bottomnav {
+    left: 50%;
+    right: auto;
+    bottom: 14px;
+    transform: translateX(-50%);
+    width: min(420px, calc(100% - 24px));
+    border-radius: 999px;
+    background: var(--c-text);
+    border: none;
+    padding: 6px;
+    box-shadow: 0 12px 30px rgb(0 0 0 / 0.2);
+  }
+
+  .ui-tab {
+    color: #8f94a5;
+    border-radius: 999px;
+  }
+
+  .ui-tab[aria-current='page'] {
+    background: var(--lime);
+    color: var(--c-text);
+    font-weight: 800;
+  }
+
+  .ui-widget[data-kind='focus'] {
+    background: var(--lime);
+    color: var(--c-text);
+  }
+
+  .ui-widget[data-kind='focus'] .ui-ring-bar {
+    stroke: var(--c-text);
+  }
+
+  .ui-widget[data-kind='focus'] .ui-ring-track {
+    stroke: rgb(0 0 0 / 0.12);
+  }
+
+  .ui-widget[data-kind='habits'] {
+    background: var(--c-accent);
+    color: #fff;
+    --c-muted: #e4e0ff;
+    --c-faint: #d9d4ff;
+  }
+
+  .ui-hero {
+    background: transparent;
+    box-shadow: none;
+  }
+
+  .ui-hero-title b {
+    color: var(--c-accent);
+  }
+
+  .ui-load-bar {
+    background: #d7dae3;
+    border-radius: 8px;
+  }
+
+  .ui-load-bar[data-today='true'] {
+    background: var(--c-text);
+  }
+
+  .ui-toast {
+    border-radius: 999px;
+  }
+}

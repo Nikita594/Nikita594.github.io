@@ -55,7 +55,7 @@ export function CategoriesSettings() {
       <ul className="flex flex-col">
         {cats.map((c) => (
           <li key={c.id} className={cx('flex items-center gap-3 rounded-lg px-2 py-1.5', c.archived && 'opacity-50')}>
-            <span className="h-3 w-3 shrink-0 rounded-full" style={{ background: c.color }} />
+            <span className="ui-color h-3 w-3 shrink-0 rounded-full" style={{ background: c.color }} />
             <button type="button" className="flex-1 text-left text-sm" onClick={() => setEditing(c)}>
               {c.name}
               {c.archived && <span className="ml-2 text-xs text-muted">скрыта</span>}
